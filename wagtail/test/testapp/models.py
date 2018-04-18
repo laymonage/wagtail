@@ -1333,6 +1333,42 @@ class StreamModel(models.Model):
             ("text", CharBlock()),
             ("rich_text", RichTextBlock()),
             ("image", ImageChooserBlock()),
+            (
+                "struct",
+                StructBlock(
+                    [
+                        ("image", ImageChooserBlock()),
+                        ("image_list", ListBlock(ImageChooserBlock())),
+                        (
+                            "struct_list",
+                            ListBlock(
+                                StructBlock(
+                                    [
+                                        ("image", ImageChooserBlock()),
+                                    ]
+                                )
+                            ),
+                        ),
+                    ]
+                ),
+            ),
+            (
+                "gallery",
+                StreamBlock(
+                    [
+                        ("image", ImageChooserBlock()),
+                        (
+                            "image_with_caption",
+                            StructBlock(
+                                [
+                                    ("image", ImageChooserBlock()),
+                                    ("caption", CharBlock()),
+                                ]
+                            ),
+                        ),
+                    ]
+                ),
+            ),
         ],
         use_json_field=False,
     )
@@ -1344,6 +1380,42 @@ class JSONStreamModel(models.Model):
             ("text", CharBlock()),
             ("rich_text", RichTextBlock()),
             ("image", ImageChooserBlock()),
+            (
+                "struct",
+                StructBlock(
+                    [
+                        ("image", ImageChooserBlock()),
+                        ("image_list", ListBlock(ImageChooserBlock())),
+                        (
+                            "struct_list",
+                            ListBlock(
+                                StructBlock(
+                                    [
+                                        ("image", ImageChooserBlock()),
+                                    ]
+                                )
+                            ),
+                        ),
+                    ]
+                ),
+            ),
+            (
+                "gallery",
+                StreamBlock(
+                    [
+                        ("image", ImageChooserBlock()),
+                        (
+                            "image_with_caption",
+                            StructBlock(
+                                [
+                                    ("image", ImageChooserBlock()),
+                                    ("caption", CharBlock()),
+                                ]
+                            ),
+                        ),
+                    ]
+                ),
+            ),
         ],
         use_json_field=True,
     )

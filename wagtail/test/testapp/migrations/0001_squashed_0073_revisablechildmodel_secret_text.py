@@ -3004,6 +3004,36 @@ class Migration(migrations.Migration):
                             ("text", wagtail.blocks.CharBlock()),
                             ("rich_text", wagtail.blocks.RichTextBlock()),
                             ("image", wagtail.images.blocks.ImageChooserBlock()),
+                            (
+                                "struct",
+                                wagtail.blocks.StructBlock(
+                                    [
+                                        (
+                                            "image",
+                                            wagtail.images.blocks.ImageChooserBlock(),
+                                        ),
+                                        (
+                                            "image_list",
+                                            wagtail.blocks.ListBlock(
+                                                wagtail.images.blocks.ImageChooserBlock()
+                                            ),
+                                        ),
+                                        (
+                                            "struct_list",
+                                            wagtail.blocks.ListBlock(
+                                                wagtail.blocks.StructBlock(
+                                                    [
+                                                        (
+                                                            "image",
+                                                            wagtail.images.blocks.ImageChooserBlock(),
+                                                        )
+                                                    ]
+                                                )
+                                            ),
+                                        ),
+                                    ]
+                                ),
+                            ),
                         ],
                         use_json_field=False,
                     ),
@@ -3159,6 +3189,36 @@ class Migration(migrations.Migration):
                             ("text", wagtail.blocks.CharBlock()),
                             ("rich_text", wagtail.blocks.RichTextBlock()),
                             ("image", wagtail.images.blocks.ImageChooserBlock()),
+                            (
+                                "struct",
+                                wagtail.blocks.StructBlock(
+                                    [
+                                        (
+                                            "image",
+                                            wagtail.images.blocks.ImageChooserBlock(),
+                                        ),
+                                        (
+                                            "image_list",
+                                            wagtail.blocks.ListBlock(
+                                                wagtail.images.blocks.ImageChooserBlock()
+                                            ),
+                                        ),
+                                        (
+                                            "struct_list",
+                                            wagtail.blocks.ListBlock(
+                                                wagtail.blocks.StructBlock(
+                                                    [
+                                                        (
+                                                            "image",
+                                                            wagtail.images.blocks.ImageChooserBlock(),
+                                                        )
+                                                    ]
+                                                )
+                                            ),
+                                        ),
+                                    ]
+                                ),
+                            ),
                         ],
                         use_json_field=True,
                     ),
