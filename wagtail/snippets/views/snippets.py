@@ -34,6 +34,7 @@ from wagtail.admin.views.generic.preview import PreviewOnEdit as PreviewOnEditVi
 from wagtail.admin.views.generic.preview import PreviewRevision
 from wagtail.admin.views.reports.base import ReportView
 from wagtail.admin.viewsets.base import ViewSet
+from wagtail.collectors import get_paginated_uses
 from wagtail.log_actions import log
 from wagtail.log_actions import registry as log_registry
 from wagtail.models import (
@@ -405,10 +406,11 @@ class DeleteView(generic.DeleteView):
         # Replaces get_object to allow returning multiple objects instead of just one
 
         if self.pk:
-            return [get_object_or_404(self.model, pk=unquote(self.pk))]
-
-        ids = self.request.GET.getlist("id")
-        objects = self.model.objects.filter(pk__in=ids)
+            objects = [get_object_or_404(self.model, pk=unquote(self.pk))]
+        else:
+            ids = self.request.GET.getlist("id")
+            objects = self.model.objects.filter(pk__in=ids)
+        self.uses = get_paginated_uses(self.request, *objects)
         return objects
 
     def get_delete_url(self):

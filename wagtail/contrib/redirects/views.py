@@ -34,6 +34,7 @@ from wagtail.contrib.redirects.utils import (
     write_to_file_storage,
 )
 from wagtail.log_actions import log
+from wagtail.collectors import get_paginated_uses
 
 permission_checker = PermissionPolicyChecker(permission_policy)
 
@@ -148,7 +149,9 @@ def delete(request, redirect_id):
     ):
         raise PermissionDenied
 
-    if request.method == "POST":
+    uses = get_paginated_uses(request, theredirect)
+
+    if request.method == "POST" and not uses.are_protected:
         with transaction.atomic():
             log(instance=theredirect, action="wagtail.delete")
             theredirect.delete()
@@ -164,6 +167,7 @@ def delete(request, redirect_id):
         "wagtailredirects/confirm_delete.html",
         {
             "redirect": theredirect,
+            "uses": uses,
         },
     )
 

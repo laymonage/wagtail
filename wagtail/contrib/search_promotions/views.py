@@ -12,6 +12,7 @@ from wagtail.admin.auth import any_permission_required, permission_required
 from wagtail.admin.forms.search import SearchForm
 from wagtail.contrib.search_promotions import forms
 from wagtail.log_actions import log
+from wagtail.collectors import get_paginated_uses
 from wagtail.search import forms as search_forms
 from wagtail.search.models import Query
 
@@ -243,7 +244,9 @@ def edit(request, query_id):
 def delete(request, query_id):
     query = get_object_or_404(Query, id=query_id)
 
-    if request.method == "POST":
+    uses = get_paginated_uses(request, query)
+
+    if request.method == "POST" and not uses.are_protected:
         editors_picks = query.editors_picks.all()
         with transaction.atomic():
             for search_pick in editors_picks:
@@ -257,5 +260,6 @@ def delete(request, query_id):
         "wagtailsearchpromotions/confirm_delete.html",
         {
             "query": query,
+            "uses": uses,
         },
     )

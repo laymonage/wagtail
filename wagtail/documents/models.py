@@ -173,6 +173,9 @@ class AbstractDocument(CollectionMember, index.Indexed, models.Model):
     def usage_url(self):
         return reverse("wagtaildocs:document_usage", args=(self.id,))
 
+    def get_edit_url(self):
+        return reverse("wagtaildocs:edit", args=(self.pk,))
+
     def is_editable_by_user(self, user):
         from wagtail.documents.permissions import permission_policy
 

@@ -17,6 +17,7 @@ from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.models import popular_tags_for_model
 from wagtail.admin.utils import get_valid_next_url_from_request
 from wagtail.documents import get_document_model
+from wagtail.collectors import get_paginated_uses
 from wagtail.documents.forms import get_document_form
 from wagtail.documents.permissions import permission_policy
 from wagtail.models import Collection
@@ -247,8 +248,9 @@ def delete(request, document_id):
         raise PermissionDenied
 
     next_url = get_valid_next_url_from_request(request)
+    uses = get_paginated_uses(request, doc)
 
-    if request.method == "POST":
+    if request.method == "POST" and not uses.are_protected:
         doc.delete()
         messages.success(
             request,
@@ -262,6 +264,7 @@ def delete(request, document_id):
         {
             "document": doc,
             "next": next_url,
+            "uses": uses,
         },
     )
 

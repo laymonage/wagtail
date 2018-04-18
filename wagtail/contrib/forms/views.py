@@ -14,6 +14,7 @@ from wagtail.admin.views.mixins import SpreadsheetExportMixin
 from wagtail.contrib.forms.forms import SelectDateForm
 from wagtail.contrib.forms.utils import get_forms_for_user
 from wagtail.models import Locale, Page
+from wagtail.collectors import get_paginated_uses
 
 
 def get_submissions_list_view(request, *args, **kwargs):
@@ -154,7 +155,9 @@ class DeleteSubmissionsView(TemplateView):
 
         self.submissions = self.get_queryset()
 
-        if self.request.method == "POST":
+        self.uses = get_paginated_uses(request, *self.submissions)
+
+        if self.request.method == "POST" and not self.uses.are_protected:
             self.handle_delete(self.submissions)
             return redirect(self.get_success_url(), page_id)
 
@@ -168,6 +171,7 @@ class DeleteSubmissionsView(TemplateView):
             {
                 "page": self.page,
                 "submissions": self.submissions,
+                "uses": self.uses,
             }
         )
 

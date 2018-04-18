@@ -17,13 +17,11 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import (
     FieldDoesNotExist,
     ImproperlyConfigured,
-    ObjectDoesNotExist,
     PermissionDenied,
     SuspiciousOperation,
 )
 from django.core.paginator import InvalidPage, Paginator
-from django.db import models, transaction
-from django.db.models.fields.related import ManyToManyField, OneToOneRel
+from django.db import models
 from django.shortcuts import get_object_or_404, redirect
 from django.template.defaultfilters import filesizeformat
 from django.utils.decorators import method_decorator
@@ -42,6 +40,7 @@ from wagtail.admin import messages
 from wagtail.admin.ui.tables import Column, DateColumn, Table, UserColumn
 from wagtail.admin.views.generic.base import WagtailAdminTemplateMixin
 from wagtail.admin.views.mixins import SpreadsheetExportMixin
+from wagtail.collectors import get_paginated_uses
 from wagtail.log_actions import log
 from wagtail.log_actions import registry as log_registry
 from wagtail.models import Locale, RevisionMixin, TranslatableMixin
@@ -984,40 +983,21 @@ class DeleteView(InstanceSpecificView):
     def delete_instance(self):
         self.instance.delete()
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["uses"] = get_paginated_uses(self.request, self.instance)
+        return context
+
     def post(self, request, *args, **kwargs):
-        try:
-            msg = _("%(model_name)s '%(object)s' deleted.") % {
-                "model_name": self.verbose_name,
-                "object": self.instance,
-            }
-            with transaction.atomic():
-                log(instance=self.instance, action="wagtail.delete")
-                self.delete_instance()
-            messages.success(request, msg)
-            return redirect(self.index_url)
-        except models.ProtectedError:
-            linked_objects = []
-            fields = self.model._meta.fields_map.values()
-            fields = (
-                obj for obj in fields if not isinstance(obj.field, ManyToManyField)
-            )
-            for rel in fields:
-                if rel.on_delete == models.PROTECT:
-                    if isinstance(rel, OneToOneRel):
-                        try:
-                            obj = getattr(self.instance, rel.get_accessor_name())
-                        except ObjectDoesNotExist:
-                            pass
-                        else:
-                            linked_objects.append(obj)
-                    else:
-                        qs = getattr(self.instance, rel.get_accessor_name())
-                        for obj in qs.all():
-                            linked_objects.append(obj)
-            context = self.get_context_data(
-                protected_error=True, linked_objects=linked_objects
-            )
+        context = self.get_context_data()
+        if context["uses"].are_protected:
             return self.render_to_response(context)
+        msg = _("{model} '{instance}' deleted.").format(
+            model=self.verbose_name, instance=self.instance
+        )
+        self.delete_instance()
+        messages.success(request, msg)
+        return redirect(self.index_url)
 
     def get_template_names(self):
         return self.model_admin.get_delete_template()

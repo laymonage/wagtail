@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 
 from django.db import models
-from django.urls import Resolver404
+from django.urls import Resolver404, reverse
 from django.utils.translation import gettext_lazy as _
 
 from wagtail.models import Page
@@ -60,9 +60,6 @@ class Redirect(models.Model):
     def title(self):
         return self.old_path
 
-    def __str__(self):
-        return self.title
-
     @property
     def link(self):
         if self.redirect_page:
@@ -78,6 +75,9 @@ class Redirect(models.Model):
         elif self.redirect_link:
             return self.redirect_link
         return None
+
+    def __str__(self):
+        return "%s → %s" % (self.old_path, self.link)
 
     def get_is_permanent_display(self):
         if self.is_permanent:
@@ -198,6 +198,9 @@ class Redirect(models.Model):
             )
         else:
             self.redirect_page_route_path = ""
+
+    def get_edit_url(self):
+        return reverse("wagtailredirects:edit", args=(self.pk,))
 
     class Meta:
         verbose_name = _("redirect")

@@ -17,6 +17,7 @@ from wagtail.models import DraftStateMixin, LockableMixin, ReferenceIndex, Workf
 
 from .widgets import AdminSnippetChooser
 
+
 SNIPPET_MODELS = []
 
 
@@ -98,6 +99,7 @@ def _register_snippet_immediately(model, viewset=None):
         obj
     ).group_by_source_object()
     model.usage_url = get_snippet_usage_url
+    model.get_edit_url = get_edit_url
     model.get_admin_base_path = get_admin_base_path
     model.get_admin_url_namespace = get_admin_url_namespace
 
@@ -138,6 +140,13 @@ def _register_snippet_immediately(model, viewset=None):
 def get_snippet_usage_url(self):
     return reverse(
         f"wagtailsnippets_{self._meta.app_label}_{self._meta.model_name}:usage",
+        args=[quote(self.pk)],
+    )
+
+
+def get_edit_url(self):
+    return reverse(
+        f"wagtailsnippets_{self._meta.app_label}_{self._meta.model_name}:edit",
         args=[quote(self.pk)],
     )
 

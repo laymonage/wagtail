@@ -10,6 +10,7 @@ from django.db.models.fields import TextField
 from django.db.models.fields.related import OneToOneField
 from django.db.models.functions import Cast
 from django.db.models.sql.where import WhereNode
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -76,6 +77,9 @@ class Query(models.Model):
             .distinct()
             .order_by("-_hits")
         )
+
+    def get_edit_url(self):
+        return reverse("wagtailsearchpromotions:edit", args=(self.pk,))
 
 
 class QueryDailyHits(models.Model):
@@ -179,6 +183,9 @@ class BaseIndexEntry(models.Model):
         for model in apps.get_models():
             if class_is_indexed(model):
                 TextIDGenericRelation(cls).contribute_to_class(model, "index_entries")
+
+    def is_shown_in_uses(self):
+        return False
 
 
 # AbstractIndexEntry will be defined depending on which database system we're using.

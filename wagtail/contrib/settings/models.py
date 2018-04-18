@@ -7,6 +7,7 @@ from django.utils.translation import gettext as _
 from wagtail.coreutils import InvokeViaAttributeShortcut
 from wagtail.models import Site
 from wagtail.utils.deprecation import RemovedInWagtail50Warning
+from django.urls import reverse
 
 from .registry import register_setting
 
@@ -143,6 +144,16 @@ class BaseSiteSetting(AbstractSetting):
         queryset = cls.base_queryset()
         instance, created = queryset.get_or_create(site=site)
         return instance
+
+    def get_edit_url(self):
+        return reverse(
+            "wagtailsettings:edit",
+            args=(
+                self._meta.app_label,
+                self._meta.model_name,
+                self.site_id,
+            ),
+        )
 
     def __str__(self):
         return _("%(site_setting)s for %(site)s") % {

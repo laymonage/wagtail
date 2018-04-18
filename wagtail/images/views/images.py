@@ -19,6 +19,7 @@ from wagtail.admin.auth import PermissionPolicyChecker
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.models import popular_tags_for_model
 from wagtail.admin.utils import get_valid_next_url_from_request
+from wagtail.collectors import get_paginated_uses
 from wagtail.images import get_image_model
 from wagtail.images.exceptions import InvalidFilterSpecError
 from wagtail.images.forms import URLGeneratorForm, get_image_form
@@ -347,8 +348,9 @@ def delete(request, image_id):
         raise PermissionDenied
 
     next_url = get_valid_next_url_from_request(request)
+    uses = get_paginated_uses(request, image)
 
-    if request.method == "POST":
+    if request.method == "POST" and not uses.are_protected:
         image.delete()
         messages.success(
             request,
@@ -362,6 +364,7 @@ def delete(request, image_id):
         {
             "image": image,
             "next": next_url,
+            "uses": uses,
         },
     )
 

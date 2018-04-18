@@ -593,6 +593,9 @@ class AbstractImage(ImageFileMixin, CollectionMember, index.Indexed, models.Mode
 
         return permission_policy.user_has_permission_for_instance(user, "change", self)
 
+    def get_edit_url(self):
+        return reverse("wagtailimages:edit", args=(self.pk,))
+
     class Meta:
         abstract = True
 
@@ -797,6 +800,9 @@ class AbstractRendition(ImageFileMixin, models.Model):
 
     wagtail_reference_index_ignore = True
 
+    def __str__(self):
+        return self.file.name
+
     @property
     def url(self):
         return self.file.url
@@ -919,6 +925,9 @@ class AbstractRendition(ImageFileMixin, models.Model):
             )
         except InvalidCacheBackendError:
             pass
+
+    def is_shown_in_uses(self):
+        return False
 
     class Meta:
         abstract = True

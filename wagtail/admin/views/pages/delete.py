@@ -9,6 +9,7 @@ from wagtail import hooks
 from wagtail.actions.delete_page import DeletePageAction
 from wagtail.admin import messages
 from wagtail.admin.utils import get_valid_next_url_from_request
+from wagtail.collectors import get_paginated_uses
 from wagtail.models import Page
 
 
@@ -39,7 +40,9 @@ def delete(request, page_id):
 
         pages_to_delete = list(pages_to_delete)
 
-        if request.method == "POST":
+        uses = get_paginated_uses(request, page)
+
+        if request.method == "POST" and not uses.are_protected:
             continue_deleting = True
             if (
                 request.POST.get("confirm_site_name")
@@ -108,5 +111,6 @@ def delete(request, page_id):
                     for translation in pages_to_delete
                 ]
             ),
+            "uses": uses,
         },
     )
