@@ -17,8 +17,17 @@
 
   &.primary {
     color: $color-grey-2;
-    border: 1px solid $color-grey-2;
+    border-color: $color-grey-2;
     background: $color-white;
+  }
+
+  &.serious {
+    color: theme('colors.critical.200');
+    border-color: theme('colors.critical.200');
+
+    &:hover {
+      color: $color-white;
+    }
   }
 
   &.disabled {
@@ -35,6 +44,11 @@
 
 .listing .index .status-tag--label {
   border: 1px solid;
+}
+
+span.status-tag {
+  pointer-events: none;
+  user-select: none;
 }
 
 button.status-tag:hover,

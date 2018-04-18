@@ -23,6 +23,7 @@ from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.panels import get_edit_handler
 from wagtail.admin.ui.tables import Column, Table, TitleColumn, UpdatedAtColumn
 from wagtail.admin.utils import get_valid_next_url_from_request
+from wagtail.collectors import get_paginated_uses
 from wagtail.log_actions import log
 from wagtail.log_actions import registry as log_registry
 from wagtail.models import DraftStateMixin
@@ -638,7 +639,9 @@ class DeleteView(
         if "pk" not in self.kwargs:
             self.kwargs["pk"] = self.args[0]
         self.kwargs["pk"] = unquote(str(self.kwargs["pk"]))
-        return super().get_object(queryset)
+        obj = super().get_object(queryset)
+        self.uses = get_paginated_uses(self.request, obj)
+        return obj
 
     def get_success_url(self):
         if not self.index_url_name:
@@ -665,6 +668,10 @@ class DeleteView(
         return self.success_message % {"object": self.object}
 
     def delete_action(self):
+        if self.uses.are_protected:
+            context = self.get_context_data()
+            return self.render_to_response(context)
+
         with transaction.atomic():
             log(instance=self.object, action="wagtail.delete")
             self.object.delete()
@@ -677,6 +684,11 @@ class DeleteView(
         if hook_response is not None:
             return hook_response
         return HttpResponseRedirect(success_url)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["uses"] = self.uses
+        return context
 
 
 class RevisionsCompareView(WagtailAdminTemplateMixin, TemplateView):
