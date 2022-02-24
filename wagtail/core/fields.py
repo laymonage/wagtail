@@ -188,3 +188,17 @@ class StreamField(models.Field):
         # Add Creator descriptor to allow the field to be set from a list or a
         # JSON string.
         setattr(cls, self.name, Creator(self))
+
+
+class JSONStreamField(StreamField):
+    def __init__(self, block_types, **kwargs):
+        self.version = kwargs.pop("version", 1)
+        super().__init__(block_types, **kwargs)
+
+    def get_internal_type(self):
+        return "JSONField" if self.version == 1 else "TextField"
+
+    def deconstruct(self):
+        name, path, args, kwargs = super().deconstruct()
+        kwargs = {**kwargs, "version": self.version}
+        return name, path, args, kwargs
