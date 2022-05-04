@@ -221,6 +221,7 @@ class AbstractPage(TranslatableMixin, TreebeardPathFixMixin, MP_Node):
 
 
 class RevisionMixin(models.Model):
+    _object_name = "Object"
     latest_revision_created_at = models.DateTimeField(
         verbose_name=_("latest revision created at"), null=True, editable=False
     )
@@ -264,15 +265,15 @@ class RevisionMixin(models.Model):
         clean=True,
     ):
         """
-        Creates and saves a page revision.
+        Creates and saves a revision.
         :param user: the user performing the action
-        :param submitted_for_moderation: indicates whether the page was submitted for moderation
+        :param submitted_for_moderation: indicates whether the object was submitted for moderation
         :param approved_go_live_at: the date and time the revision is approved to go live
         :param changed: indicates whether there were any content changes
         :param log_action: flag for logging the action. Pass False to skip logging. Can be passed an action string.
             Defaults to 'wagtail.edit' when no 'previous_revision' param is passed, otherwise 'wagtail.revert'
         :param previous_revision: indicates a revision reversal. Should be set to the previous revision instance
-        :param clean: Set this to False to skip cleaning page content before saving this revision
+        :param clean: Set this to False to skip cleaning object content before saving this revision
         :return: the newly created revision
         """
         if clean:
@@ -319,7 +320,11 @@ class RevisionMixin(models.Model):
 
         # Log
         logger.info(
-            'Page edited: "%s" id=%d revision_id=%d', self.title, self.id, revision.id
+            '%s edited: "%s" id=%d revision_id=%d',
+            self._object_name,
+            self.title,
+            self.id,
+            revision.id,
         )
         if log_action:
             if not previous_revision:
@@ -353,7 +358,8 @@ class RevisionMixin(models.Model):
 
         if submitted_for_moderation:
             logger.info(
-                'Page submitted for moderation: "%s" id=%d revision_id=%d',
+                '%s submitted for moderation: "%s" id=%d revision_id=%d',
+                self._object_name,
                 self.title,
                 self.id,
                 revision.id,
@@ -368,6 +374,7 @@ class RevisionMixin(models.Model):
 class Page(
     RevisionMixin, AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase
 ):
+    _object_name = "Page"
     title = models.CharField(
         verbose_name=_("title"),
         max_length=255,
