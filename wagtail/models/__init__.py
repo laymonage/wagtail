@@ -220,7 +220,153 @@ class AbstractPage(TranslatableMixin, TreebeardPathFixMixin, MP_Node):
         abstract = True
 
 
-class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
+class RevisionMixin(models.Model):
+    latest_revision_created_at = models.DateTimeField(
+        verbose_name=_("latest revision created at"), null=True, editable=False
+    )
+    live_revision = models.ForeignKey(
+        "Revision",
+        related_name="+",
+        verbose_name=_("live revision"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        editable=False,
+    )
+
+    @property
+    def revisions(self):
+        # This acts as a replacement for Django's related manager since we don't
+        # use a GenericRelation/GenericForeignKey.
+        return Revision.objects.filter(object_id=self.id)
+
+    @property
+    def approved_schedule(self):
+        return self.revisions.exclude(approved_go_live_at__isnull=True).exists()
+
+    def get_latest_revision(self):
+        return self.revisions.order_by("-created_at", "-id").first()
+
+    def save_revision(
+        self,
+        user=None,
+        submitted_for_moderation=False,
+        approved_go_live_at=None,
+        changed=True,
+        log_action=False,
+        previous_revision=None,
+        clean=True,
+    ):
+        """
+        Creates and saves a page revision.
+        :param user: the user performing the action
+        :param submitted_for_moderation: indicates whether the page was submitted for moderation
+        :param approved_go_live_at: the date and time the revision is approved to go live
+        :param changed: indicates whether there were any content changes
+        :param log_action: flag for logging the action. Pass False to skip logging. Can be passed an action string.
+            Defaults to 'wagtail.edit' when no 'previous_revision' param is passed, otherwise 'wagtail.revert'
+        :param previous_revision: indicates a revision reversal. Should be set to the previous revision instance
+        :param clean: Set this to False to skip cleaning page content before saving this revision
+        :return: the newly created revision
+        """
+        # Raise an error if this page is an alias.
+        if self.alias_of_id:
+            raise RuntimeError(
+                "save_revision() was called on an alias page. "
+                "Revisions are not required for alias pages as they are an exact copy of another page."
+            )
+
+        if clean:
+            self.full_clean()
+
+        new_comments = getattr(self, COMMENTS_RELATION_NAME).filter(pk__isnull=True)
+        for comment in new_comments:
+            # We need to ensure comments have an id in the revision, so positions can be identified correctly
+            comment.save()
+
+        # Create revision
+        # We want to always use the default Page model's ContentType as the
+        # base_content_type so that we can query for page revisions without
+        # having to know the specific Page type.
+        revision = Revision.objects.create(
+            content_object=self,
+            base_content_type=get_default_page_content_type(),
+            submitted_for_moderation=submitted_for_moderation,
+            user=user,
+            approved_go_live_at=approved_go_live_at,
+            content=self.serializable_data(),
+        )
+
+        for comment in new_comments:
+            comment.revision_created = revision
+
+        update_fields = [COMMENTS_RELATION_NAME]
+
+        self.latest_revision_created_at = revision.created_at
+        update_fields.append("latest_revision_created_at")
+
+        self.draft_title = self.title
+        update_fields.append("draft_title")
+
+        if changed:
+            self.has_unpublished_changes = True
+            update_fields.append("has_unpublished_changes")
+
+        if update_fields:
+            # clean=False because the fields we're updating don't need validation
+            self.save(update_fields=update_fields, clean=False)
+
+        # Log
+        logger.info(
+            'Page edited: "%s" id=%d revision_id=%d', self.title, self.id, revision.id
+        )
+        if log_action:
+            if not previous_revision:
+                log(
+                    instance=self,
+                    action=log_action
+                    if isinstance(log_action, str)
+                    else "wagtail.edit",
+                    user=user,
+                    revision=revision,
+                    content_changed=changed,
+                )
+            else:
+                log(
+                    instance=self,
+                    action=log_action
+                    if isinstance(log_action, str)
+                    else "wagtail.revert",
+                    user=user,
+                    data={
+                        "revision": {
+                            "id": previous_revision.id,
+                            "created": previous_revision.created_at.strftime(
+                                "%d %b %Y %H:%M"
+                            ),
+                        }
+                    },
+                    revision=revision,
+                    content_changed=changed,
+                )
+
+        if submitted_for_moderation:
+            logger.info(
+                'Page submitted for moderation: "%s" id=%d revision_id=%d',
+                self.title,
+                self.id,
+                revision.id,
+            )
+
+        return revision
+
+    class Meta:
+        abstract = True
+
+
+class Page(
+    RevisionMixin, AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase
+):
     title = models.CharField(
         verbose_name=_("title"),
         max_length=255,
@@ -871,129 +1017,6 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
         # in a fixture or migration that didn't explicitly handle draft_title)
         return self.draft_title or self.title
 
-    def save_revision(
-        self,
-        user=None,
-        submitted_for_moderation=False,
-        approved_go_live_at=None,
-        changed=True,
-        log_action=False,
-        previous_revision=None,
-        clean=True,
-    ):
-        """
-        Creates and saves a page revision.
-        :param user: the user performing the action
-        :param submitted_for_moderation: indicates whether the page was submitted for moderation
-        :param approved_go_live_at: the date and time the revision is approved to go live
-        :param changed: indicates whether there were any content changes
-        :param log_action: flag for logging the action. Pass False to skip logging. Can be passed an action string.
-            Defaults to 'wagtail.edit' when no 'previous_revision' param is passed, otherwise 'wagtail.revert'
-        :param previous_revision: indicates a revision reversal. Should be set to the previous revision instance
-        :param clean: Set this to False to skip cleaning page content before saving this revision
-        :return: the newly created revision
-        """
-        # Raise error if this is not the specific version of the page
-        if not isinstance(self, self.specific_class):
-            raise RuntimeError(
-                "page.save_revision() must be called on the specific version of the page. "
-                "Call page.specific.save_revision() instead."
-            )
-
-        # Raise an error if this page is an alias.
-        if self.alias_of_id:
-            raise RuntimeError(
-                "page.save_revision() was called on an alias page. "
-                "Revisions are not required for alias pages as they are an exact copy of another page."
-            )
-
-        if clean:
-            self.full_clean()
-
-        new_comments = getattr(self, COMMENTS_RELATION_NAME).filter(pk__isnull=True)
-        for comment in new_comments:
-            # We need to ensure comments have an id in the revision, so positions can be identified correctly
-            comment.save()
-
-        # Create revision
-        # We want to always use the default Page model's ContentType as the
-        # base_content_type so that we can query for page revisions without
-        # having to know the specific Page type.
-        revision = Revision.objects.create(
-            content_object=self,
-            base_content_type=get_default_page_content_type(),
-            submitted_for_moderation=submitted_for_moderation,
-            user=user,
-            approved_go_live_at=approved_go_live_at,
-            content=self.serializable_data(),
-        )
-
-        for comment in new_comments:
-            comment.revision_created = revision
-
-        update_fields = [COMMENTS_RELATION_NAME]
-
-        self.latest_revision_created_at = revision.created_at
-        update_fields.append("latest_revision_created_at")
-
-        self.draft_title = self.title
-        update_fields.append("draft_title")
-
-        if changed:
-            self.has_unpublished_changes = True
-            update_fields.append("has_unpublished_changes")
-
-        if update_fields:
-            # clean=False because the fields we're updating don't need validation
-            self.save(update_fields=update_fields, clean=False)
-
-        # Log
-        logger.info(
-            'Page edited: "%s" id=%d revision_id=%d', self.title, self.id, revision.id
-        )
-        if log_action:
-            if not previous_revision:
-                log(
-                    instance=self,
-                    action=log_action
-                    if isinstance(log_action, str)
-                    else "wagtail.edit",
-                    user=user,
-                    revision=revision,
-                    content_changed=changed,
-                )
-            else:
-                log(
-                    instance=self,
-                    action=log_action
-                    if isinstance(log_action, str)
-                    else "wagtail.revert",
-                    user=user,
-                    data={
-                        "revision": {
-                            "id": previous_revision.id,
-                            "created": previous_revision.created_at.strftime(
-                                "%d %b %Y %H:%M"
-                            ),
-                        }
-                    },
-                    revision=revision,
-                    content_changed=changed,
-                )
-
-        if submitted_for_moderation:
-            logger.info(
-                'Page submitted for moderation: "%s" id=%d revision_id=%d',
-                self.title,
-                self.id,
-                revision.id,
-            )
-
-        return revision
-
-    def get_latest_revision(self):
-        return self.revisions.order_by("-created_at", "-id").first()
-
     def get_latest_revision_as_page(self):
         if not self.has_unpublished_changes:
             # Use the live database copy in preference to the revision record, as:
@@ -1565,7 +1588,7 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
         if hasattr(self, "_approved_schedule"):
             return self._approved_schedule
 
-        return self.revisions.exclude(approved_go_live_at__isnull=True).exists()
+        return super().approved_schedule
 
     def has_unpublished_subtree(self):
         """
