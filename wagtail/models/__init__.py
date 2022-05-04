@@ -234,6 +234,12 @@ class RevisionMixin(models.Model):
         editable=False,
     )
 
+    @cached_property
+    def base_content_type(self):
+        # Set default value for base_content_type to the content_type.
+        # This distinction is useful for models that use inheritance.
+        return self.content_type
+
     @property
     def revisions(self):
         # This acts as a replacement for Django's related manager since we don't
@@ -280,9 +286,6 @@ class RevisionMixin(models.Model):
                 comment.save()
 
         # Create revision
-        # We want to always use the default Page model's ContentType as the
-        # base_content_type so that we can query for page revisions without
-        # having to know the specific Page type.
         revision = Revision.objects.create(
             content_object=self,
             base_content_type=get_default_page_content_type(),
@@ -553,6 +556,13 @@ class Page(
         # Always use the specific page instance when querying for revisions as
         # they are always saved with the specific content_type.
         return self.specific_deferred._revisions
+
+    @cached_property
+    def base_content_type(self):
+        # We want to always use the default Page model's ContentType as the
+        # base_content_type so that we can query for page revisions without
+        # having to know the specific Page type.
+        return get_default_page_content_type()
 
     @classmethod
     def get_streamfield_names(cls):
