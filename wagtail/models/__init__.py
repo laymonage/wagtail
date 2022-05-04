@@ -269,13 +269,6 @@ class RevisionMixin(models.Model):
         :param clean: Set this to False to skip cleaning page content before saving this revision
         :return: the newly created revision
         """
-        # Raise an error if this page is an alias.
-        if self.alias_of_id:
-            raise RuntimeError(
-                "save_revision() was called on an alias page. "
-                "Revisions are not required for alias pages as they are an exact copy of another page."
-            )
-
         if clean:
             self.full_clean()
 
@@ -822,6 +815,32 @@ class Page(
             )
 
         return errors
+
+    def save_revision(
+        self,
+        user=None,
+        submitted_for_moderation=False,
+        approved_go_live_at=None,
+        changed=True,
+        log_action=False,
+        previous_revision=None,
+        clean=True,
+    ):
+        # Raise an error if this page is an alias.
+        if self.alias_of_id:
+            raise RuntimeError(
+                "save_revision() was called on an alias page. "
+                "Revisions are not required for alias pages as they are an exact copy of another page."
+            )
+        return super().save_revision(
+            user,
+            submitted_for_moderation,
+            approved_go_live_at,
+            changed,
+            log_action,
+            previous_revision,
+            clean,
+        )
 
     def _update_descendant_url_paths(self, old_url_path, new_url_path):
         (
