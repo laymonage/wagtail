@@ -272,10 +272,12 @@ class RevisionMixin(models.Model):
         if clean:
             self.full_clean()
 
-        new_comments = getattr(self, COMMENTS_RELATION_NAME).filter(pk__isnull=True)
-        for comment in new_comments:
-            # We need to ensure comments have an id in the revision, so positions can be identified correctly
-            comment.save()
+        comments = getattr(self, COMMENTS_RELATION_NAME)
+        if comments:
+            new_comments = comments.filter(pk__isnull=True)
+            for comment in new_comments:
+                # We need to ensure comments have an id in the revision, so positions can be identified correctly
+                comment.save()
 
         # Create revision
         # We want to always use the default Page model's ContentType as the
@@ -290,10 +292,13 @@ class RevisionMixin(models.Model):
             content=self.serializable_data(),
         )
 
-        for comment in new_comments:
-            comment.revision_created = revision
+        update_fields = []
 
-        update_fields = [COMMENTS_RELATION_NAME]
+        if comments:
+            for comment in new_comments:
+                comment.revision_created = revision
+
+            update_fields = [COMMENTS_RELATION_NAME]
 
         self.latest_revision_created_at = revision.created_at
         update_fields.append("latest_revision_created_at")
