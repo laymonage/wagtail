@@ -305,13 +305,15 @@ class RevisionMixin:
 
             update_fields = [COMMENTS_RELATION_NAME]
 
-        self.latest_revision_created_at = revision.created_at
-        update_fields.append("latest_revision_created_at")
+        if hasattr(self, "latest_revision_created_at"):
+            self.latest_revision_created_at = revision.created_at
+            update_fields.append("latest_revision_created_at")
 
-        self.draft_title = self.title
-        update_fields.append("draft_title")
+        if hasattr(self, "draft_title"):
+            self.draft_title = self.title
+            update_fields.append("draft_title")
 
-        if changed:
+        if hasattr(self, "has_unpublished_changes") and changed:
             self.has_unpublished_changes = True
             update_fields.append("has_unpublished_changes")
 
