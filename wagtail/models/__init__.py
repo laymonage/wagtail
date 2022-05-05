@@ -280,7 +280,7 @@ class RevisionMixin:
         if clean:
             self.full_clean()
 
-        comments = getattr(self, COMMENTS_RELATION_NAME)
+        comments = getattr(self, COMMENTS_RELATION_NAME, None)
         if comments:
             new_comments = comments.filter(pk__isnull=True)
             for comment in new_comments:
