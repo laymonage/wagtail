@@ -235,7 +235,7 @@ class RevisionMixin:
         # use a GenericRelation/GenericForeignKey.
         return Revision.objects.filter(
             base_content_type=self.base_content_type,
-            object_id=self.id,
+            object_id=self.pk,
         )
 
     @property
@@ -319,7 +319,7 @@ class RevisionMixin:
             '%s edited: "%s" id=%d revision_id=%d',
             self._object_name,
             self.title,
-            self.id,
+            self.pk,
             revision.id,
         )
         if log_action:
@@ -357,7 +357,7 @@ class RevisionMixin:
                 '%s submitted for moderation: "%s" id=%d revision_id=%d',
                 self._object_name,
                 self.title,
-                self.id,
+                self.pk,
                 revision.id,
             )
 
