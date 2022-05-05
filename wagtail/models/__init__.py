@@ -295,13 +295,6 @@ class RevisionMixin:
         )
 
         # Log
-        logger.info(
-            '%s edited: "%s" id=%d revision_id=%d',
-            type(self).__name__,
-            str(self),
-            self.pk,
-            revision.id,
-        )
         if log_action:
             if not previous_revision:
                 log(
@@ -331,15 +324,6 @@ class RevisionMixin:
                     revision=revision,
                     content_changed=changed,
                 )
-
-        if submitted_for_moderation:
-            logger.info(
-                '%s submitted for moderation: "%s" id=%d revision_id=%d',
-                type(self).__name__,
-                str(self),
-                self.pk,
-                revision.id,
-            )
 
         return revision
 
