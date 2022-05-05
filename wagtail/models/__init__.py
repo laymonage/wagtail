@@ -221,8 +221,6 @@ class AbstractPage(TranslatableMixin, TreebeardPathFixMixin, MP_Node):
 
 
 class RevisionMixin:
-    _object_name = "Object"
-
     @property
     def base_content_type(self):
         # Set default value for base_content_type to the content_type.
@@ -247,11 +245,26 @@ class RevisionMixin:
             return self.content_type
         return ContentType.objects.get_for_model(self)
 
-    def get_title(self):
-        return getattr(self, "title", str(self))
-
     def get_latest_revision(self):
         return self.revisions.order_by("-created_at", "-id").first()
+
+    def log_edited(self, revision):
+        logger.info(
+            '%s edited: "%s" id=%d revision_id=%d',
+            type(self).__name__,
+            str(self),
+            self.pk,
+            revision.id,
+        )
+
+    def log_submitted_for_moderation(self, revision):
+        logger.info(
+            '%s submitted for moderation: "%s" id=%d revision_id=%d',
+            type(self).__name__,
+            str(self),
+            self.pk,
+            revision.id,
+        )
 
     def serializable_data(self):
         if isinstance(self, ClusterableModel):
@@ -325,13 +338,7 @@ class RevisionMixin:
             self.save(update_fields=update_fields, clean=False)
 
         # Log
-        logger.info(
-            '%s edited: "%s" id=%d revision_id=%d',
-            self._object_name,
-            self.get_title(),
-            self.pk,
-            revision.id,
-        )
+        self.log_edited(revision)
         if log_action:
             if not previous_revision:
                 log(
@@ -363,13 +370,7 @@ class RevisionMixin:
                 )
 
         if submitted_for_moderation:
-            logger.info(
-                '%s submitted for moderation: "%s" id=%d revision_id=%d',
-                self._object_name,
-                self.get_title(),
-                self.pk,
-                revision.id,
-            )
+            self.log_submitted_for_moderation(revision)
 
         return revision
 
@@ -377,7 +378,6 @@ class RevisionMixin:
 class Page(
     RevisionMixin, AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase
 ):
-    _object_name = "Page"
     title = models.CharField(
         verbose_name=_("title"),
         max_length=255,
@@ -840,6 +840,22 @@ class Page(
             )
 
         return errors
+
+    def log_edited(self, revision):
+        logger.info(
+            'Page edited: "%s" id=%d revision_id=%d',
+            self.title,
+            self.id,
+            revision.id,
+        )
+
+    def log_submitted_for_moderation(self, revision):
+        logger.info(
+            'Page submitted for moderation: "%s" id=%d revision_id=%d',
+            self.title,
+            self.id,
+            revision.id,
+        )
 
     def save_revision(
         self,
