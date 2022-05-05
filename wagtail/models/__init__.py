@@ -254,24 +254,6 @@ class RevisionMixin:
     def get_latest_revision(self):
         return self.revisions.order_by("-created_at", "-id").first()
 
-    def log_edited(self, revision):
-        logger.info(
-            '%s edited: "%s" id=%d revision_id=%d',
-            type(self).__name__,
-            str(self),
-            self.pk,
-            revision.id,
-        )
-
-    def log_submitted_for_moderation(self, revision):
-        logger.info(
-            '%s submitted for moderation: "%s" id=%d revision_id=%d',
-            type(self).__name__,
-            str(self),
-            self.pk,
-            revision.id,
-        )
-
     def serializable_data(self):
         if isinstance(self, ClusterableModel):
             return super().serializable_data()
@@ -302,13 +284,6 @@ class RevisionMixin:
         if clean:
             self.full_clean()
 
-        comments = getattr(self, COMMENTS_RELATION_NAME, None)
-        if comments:
-            new_comments = comments.filter(pk__isnull=True)
-            for comment in new_comments:
-                # We need to ensure comments have an id in the revision, so positions can be identified correctly
-                comment.save()
-
         # Create revision
         revision = Revision.objects.create(
             content_object=self,
@@ -319,32 +294,14 @@ class RevisionMixin:
             content=self.serializable_data(),
         )
 
-        update_fields = []
-
-        if comments:
-            for comment in new_comments:
-                comment.revision_created = revision
-
-            update_fields = [COMMENTS_RELATION_NAME]
-
-        if hasattr(self, "latest_revision_created_at"):
-            self.latest_revision_created_at = revision.created_at
-            update_fields.append("latest_revision_created_at")
-
-        if hasattr(self, "draft_title"):
-            self.draft_title = self.title
-            update_fields.append("draft_title")
-
-        if hasattr(self, "has_unpublished_changes") and changed:
-            self.has_unpublished_changes = True
-            update_fields.append("has_unpublished_changes")
-
-        if update_fields:
-            # clean=False because the fields we're updating don't need validation
-            self.save(update_fields=update_fields, clean=False)
-
         # Log
-        self.log_edited(revision)
+        logger.info(
+            '%s edited: "%s" id=%d revision_id=%d',
+            type(self).__name__,
+            str(self),
+            self.pk,
+            revision.id,
+        )
         if log_action:
             if not previous_revision:
                 log(
@@ -376,7 +333,13 @@ class RevisionMixin:
                 )
 
         if submitted_for_moderation:
-            self.log_submitted_for_moderation(revision)
+            logger.info(
+                '%s submitted for moderation: "%s" id=%d revision_id=%d',
+                type(self).__name__,
+                str(self),
+                self.pk,
+                revision.id,
+            )
 
         return revision
 
@@ -847,48 +810,6 @@ class Page(
 
         return errors
 
-    def log_edited(self, revision):
-        logger.info(
-            'Page edited: "%s" id=%d revision_id=%d',
-            self.title,
-            self.id,
-            revision.id,
-        )
-
-    def log_submitted_for_moderation(self, revision):
-        logger.info(
-            'Page submitted for moderation: "%s" id=%d revision_id=%d',
-            self.title,
-            self.id,
-            revision.id,
-        )
-
-    def save_revision(
-        self,
-        user=None,
-        submitted_for_moderation=False,
-        approved_go_live_at=None,
-        changed=True,
-        log_action=False,
-        previous_revision=None,
-        clean=True,
-    ):
-        # Raise an error if this page is an alias.
-        if self.alias_of_id:
-            raise RuntimeError(
-                "save_revision() was called on an alias page. "
-                "Revisions are not required for alias pages as they are an exact copy of another page."
-            )
-        return super().save_revision(
-            user,
-            submitted_for_moderation,
-            approved_go_live_at,
-            changed,
-            log_action,
-            previous_revision,
-            clean,
-        )
-
     def _update_descendant_url_paths(self, old_url_path, new_url_path):
         (
             Page.objects.filter(path__startswith=self.path)
@@ -1082,6 +1003,109 @@ class Page(
         # Fall back on title if draft_title is blank (which may happen if the page was created
         # in a fixture or migration that didn't explicitly handle draft_title)
         return self.draft_title or self.title
+
+    def save_revision(
+        self,
+        user=None,
+        submitted_for_moderation=False,
+        approved_go_live_at=None,
+        changed=True,
+        log_action=False,
+        previous_revision=None,
+        clean=True,
+    ):
+        # Raise an error if this page is an alias.
+        if self.alias_of_id:
+            raise RuntimeError(
+                "save_revision() was called on an alias page. "
+                "Revisions are not required for alias pages as they are an exact copy of another page."
+            )
+
+        if clean:
+            self.full_clean()
+
+        new_comments = getattr(self, COMMENTS_RELATION_NAME).filter(pk__isnull=True)
+        for comment in new_comments:
+            # We need to ensure comments have an id in the revision, so positions can be identified correctly
+            comment.save()
+
+        # Create revision
+        revision = Revision.objects.create(
+            content_type=self.get_content_type(),
+            base_content_type=self.base_content_type,
+            object_id=self.pk,
+            submitted_for_moderation=submitted_for_moderation,
+            user=user,
+            approved_go_live_at=approved_go_live_at,
+            content=self.serializable_data(),
+        )
+        # This is necessary to prevent fetching a fresh page instance when
+        # changing first_published_at.
+        # Ref: https://github.com/wagtail/wagtail/pull/3498
+        revision.content_object = self
+
+        for comment in new_comments:
+            comment.revision_created = revision
+
+        update_fields = [COMMENTS_RELATION_NAME]
+
+        self.latest_revision_created_at = revision.created_at
+        update_fields.append("latest_revision_created_at")
+
+        self.draft_title = self.title
+        update_fields.append("draft_title")
+
+        if changed:
+            self.has_unpublished_changes = True
+            update_fields.append("has_unpublished_changes")
+
+        if update_fields:
+            # clean=False because the fields we're updating don't need validation
+            self.save(update_fields=update_fields, clean=False)
+
+        # Log
+        logger.info(
+            'Page edited: "%s" id=%d revision_id=%d', self.title, self.id, revision.id
+        )
+        if log_action:
+            if not previous_revision:
+                log(
+                    instance=self,
+                    action=log_action
+                    if isinstance(log_action, str)
+                    else "wagtail.edit",
+                    user=user,
+                    revision=revision,
+                    content_changed=changed,
+                )
+            else:
+                log(
+                    instance=self,
+                    action=log_action
+                    if isinstance(log_action, str)
+                    else "wagtail.revert",
+                    user=user,
+                    data={
+                        "revision": {
+                            "id": previous_revision.id,
+                            "created": previous_revision.created_at.strftime(
+                                "%d %b %Y %H:%M"
+                            ),
+                        }
+                    },
+                    revision=revision,
+                    content_changed=changed,
+                )
+
+        if submitted_for_moderation:
+            logger.info(
+                'Page submitted for moderation: "%s" id=%d revision_id=%d',
+                self.title,
+                self.id,
+                revision.id,
+            )
+
+        return revision
 
     def get_latest_revision_as_page(self):
         if not self.has_unpublished_changes:
