@@ -225,9 +225,13 @@ class RevisionMixin:
 
     @property
     def base_content_type(self):
-        # Set default value for base_content_type to the content_type.
-        # This distinction is useful for models that use inheritance.
-        return self.get_content_type()
+        parents = self._meta.get_parent_list()
+        # Get the last concrete parent in the MRO as the base_content_type.
+        if parents:
+            return ContentType.objects.get_for_model(parents[-1])
+        # This model doesn't inherit from a concrete model,
+        # use it as the base_content_type.
+        return ContentType.objects.get_for_model(self)
 
     @property
     def revisions(self):
