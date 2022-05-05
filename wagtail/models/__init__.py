@@ -224,7 +224,15 @@ class RevisionMixin:
     """A mixin that allows a model to have revisions."""
 
     @property
-    def base_content_type(self):
+    def revisions(self):
+        # This acts as a replacement for Django's related manager since we don't
+        # use a GenericRelation/GenericForeignKey.
+        return Revision.objects.filter(
+            base_content_type=self.get_base_content_type(),
+            object_id=self.pk,
+        )
+
+    def get_base_content_type(self):
         parents = self._meta.get_parent_list()
         # Get the last concrete parent in the MRO as the base_content_type.
         if parents:
@@ -232,15 +240,6 @@ class RevisionMixin:
         # This model doesn't inherit from a concrete model,
         # use it as the base_content_type.
         return ContentType.objects.get_for_model(self)
-
-    @property
-    def revisions(self):
-        # This acts as a replacement for Django's related manager since we don't
-        # use a GenericRelation/GenericForeignKey.
-        return Revision.objects.filter(
-            base_content_type=self.base_content_type,
-            object_id=self.pk,
-        )
 
     def get_content_type(self):
         if hasattr(self, "content_type"):
@@ -1012,7 +1011,7 @@ class Page(
         # Create revision
         revision = Revision.objects.create(
             content_type=self.get_content_type(),
-            base_content_type=self.base_content_type,
+            base_content_type=self.get_base_content_type(),
             object_id=self.pk,
             submitted_for_moderation=submitted_for_moderation,
             user=user,
