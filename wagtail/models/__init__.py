@@ -242,10 +242,6 @@ class RevisionMixin:
             object_id=self.pk,
         )
 
-    @property
-    def approved_schedule(self):
-        return self.revisions.exclude(approved_go_live_at__isnull=True).exists()
-
     def get_content_type(self):
         if hasattr(self, "content_type"):
             return self.content_type
@@ -1662,7 +1658,7 @@ class Page(
         if hasattr(self, "_approved_schedule"):
             return self._approved_schedule
 
-        return super().approved_schedule
+        return self.revisions.exclude(approved_go_live_at__isnull=True).exists()
 
     def has_unpublished_subtree(self):
         """
