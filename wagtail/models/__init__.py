@@ -247,6 +247,9 @@ class RevisionMixin:
             return self.content_type
         return ContentType.objects.get_for_model(self)
 
+    def get_title(self):
+        return getattr(self, "title", str(self))
+
     def get_latest_revision(self):
         return self.revisions.order_by("-created_at", "-id").first()
 
@@ -325,7 +328,7 @@ class RevisionMixin:
         logger.info(
             '%s edited: "%s" id=%d revision_id=%d',
             self._object_name,
-            self.title,
+            self.get_title(),
             self.pk,
             revision.id,
         )
@@ -363,7 +366,7 @@ class RevisionMixin:
             logger.info(
                 '%s submitted for moderation: "%s" id=%d revision_id=%d',
                 self._object_name,
-                self.title,
+                self.get_title(),
                 self.pk,
                 revision.id,
             )
