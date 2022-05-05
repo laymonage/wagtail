@@ -221,6 +221,8 @@ class AbstractPage(TranslatableMixin, TreebeardPathFixMixin, MP_Node):
 
 
 class RevisionMixin:
+    """A mixin that allows a model to have revisions."""
+
     @property
     def base_content_type(self):
         # Set default value for base_content_type to the content_type.
