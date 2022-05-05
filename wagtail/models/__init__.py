@@ -223,11 +223,11 @@ class AbstractPage(TranslatableMixin, TreebeardPathFixMixin, MP_Node):
 class RevisionMixin:
     _object_name = "Object"
 
-    @cached_property
+    @property
     def base_content_type(self):
         # Set default value for base_content_type to the content_type.
         # This distinction is useful for models that use inheritance.
-        return self.content_type
+        return self.get_content_type()
 
     @property
     def revisions(self):
@@ -238,6 +238,11 @@ class RevisionMixin:
     @property
     def approved_schedule(self):
         return self.revisions.exclude(approved_go_live_at__isnull=True).exists()
+
+    def get_content_type(self):
+        if hasattr(self, "content_type"):
+            return self.content_type
+        return ContentType.objects.get_for_model(self)
 
     def get_latest_revision(self):
         return self.revisions.order_by("-created_at", "-id").first()
