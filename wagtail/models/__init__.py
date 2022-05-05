@@ -44,7 +44,7 @@ from django.utils.module_loading import import_string
 from django.utils.text import capfirst, slugify
 from django.utils.translation import gettext_lazy as _
 from modelcluster.fields import ParentalKey
-from modelcluster.models import ClusterableModel
+from modelcluster.models import ClusterableModel, get_serializable_data_for_fields
 from treebeard.mp_tree import MP_Node
 
 from wagtail.actions.copy_for_translation import CopyPageForTranslationAction
@@ -249,6 +249,11 @@ class RevisionMixin:
 
     def get_latest_revision(self):
         return self.revisions.order_by("-created_at", "-id").first()
+
+    def serializable_data(self):
+        if isinstance(self, ClusterableModel):
+            return super().serializable_data()
+        return get_serializable_data_for_fields(self)
 
     def save_revision(
         self,
