@@ -220,20 +220,8 @@ class AbstractPage(TranslatableMixin, TreebeardPathFixMixin, MP_Node):
         abstract = True
 
 
-class RevisionMixin(models.Model):
+class RevisionMixin:
     _object_name = "Object"
-    latest_revision_created_at = models.DateTimeField(
-        verbose_name=_("latest revision created at"), null=True, editable=False
-    )
-    live_revision = models.ForeignKey(
-        "Revision",
-        related_name="+",
-        verbose_name=_("live revision"),
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        editable=False,
-    )
 
     @cached_property
     def base_content_type(self):
@@ -366,9 +354,6 @@ class RevisionMixin(models.Model):
             )
 
         return revision
-
-    class Meta:
-        abstract = True
 
 
 class Page(
