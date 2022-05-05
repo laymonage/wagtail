@@ -233,7 +233,10 @@ class RevisionMixin:
     def revisions(self):
         # This acts as a replacement for Django's related manager since we don't
         # use a GenericRelation/GenericForeignKey.
-        return Revision.objects.filter(object_id=self.id)
+        return Revision.objects.filter(
+            base_content_type=self.base_content_type,
+            object_id=self.id,
+        )
 
     @property
     def approved_schedule(self):
