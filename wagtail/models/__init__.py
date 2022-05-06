@@ -44,7 +44,11 @@ from django.utils.module_loading import import_string
 from django.utils.text import capfirst, slugify
 from django.utils.translation import gettext_lazy as _
 from modelcluster.fields import ParentalKey
-from modelcluster.models import ClusterableModel, get_serializable_data_for_fields, model_from_serializable_data
+from modelcluster.models import (
+    ClusterableModel,
+    get_serializable_data_for_fields,
+    model_from_serializable_data,
+)
 from treebeard.mp_tree import MP_Node
 
 from wagtail.actions.copy_for_translation import CopyPageForTranslationAction
@@ -258,7 +262,9 @@ class RevisionMixin:
     def from_serializable_data(cls, data, check_fks=True, strict_fks=False):
         if issubclass(cls, ClusterableModel):
             return super().from_serializable_data(data, check_fks, strict_fks)
-        return model_from_serializable_data(cls, data, check_fks=check_fks, strict_fks=strict_fks)
+        return model_from_serializable_data(
+            cls, data, check_fks=check_fks, strict_fks=strict_fks
+        )
 
     def with_content_json(self, content):
         """
