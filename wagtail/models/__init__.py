@@ -238,17 +238,20 @@ class RevisionMixin:
 
     def get_base_content_type(self):
         parents = self._meta.get_parent_list()
-        # Get the last concrete parent in the MRO as the base_content_type.
+        # Get the last non-abstract parent in the MRO as the base_content_type.
+        # Note: for_concrete_model=False means that the model can be a proxy model.
         if parents:
-            return ContentType.objects.get_for_model(parents[-1])
-        # This model doesn't inherit from a concrete model,
+            return ContentType.objects.get_for_model(
+                parents[-1], for_concrete_model=False
+            )
+        # This model doesn't inherit from a non-abstract model,
         # use it as the base_content_type.
-        return ContentType.objects.get_for_model(self)
+        return ContentType.objects.get_for_model(self, for_concrete_model=False)
 
     def get_content_type(self):
         if hasattr(self, "content_type"):
             return self.content_type
-        return ContentType.objects.get_for_model(self)
+        return ContentType.objects.get_for_model(self, for_concrete_model=False)
 
     def get_latest_revision(self):
         return self.revisions.order_by("-created_at", "-id").first()
