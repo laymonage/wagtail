@@ -924,15 +924,15 @@ register_snippet(AdvertWithTabbedInterface)
 
 
 # Models with RevisionMixin
-class RevisionModel(RevisionMixin, models.Model):
+class RevisableModel(RevisionMixin, models.Model):
     text = models.TextField()
 
 
-class RevisionChildModel(RevisionModel):
+class RevisableChildModel(RevisableModel):
     pass
 
 
-class RevisionGrandChildModel(RevisionChildModel):
+class RevisableGrandChildModel(RevisableChildModel):
     pass
 
 

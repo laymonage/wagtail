@@ -3,17 +3,17 @@ from django.test import TestCase
 from wagtail.models import Page, Revision, get_default_page_content_type
 
 from wagtail.test.testapp.models import (
-    RevisionGrandChildModel,
-    RevisionModel,
+    RevisableGrandChildModel,
+    RevisableModel,
     SimplePage,
 )
 
 
-class TestRevisionModel(TestCase):
+class TestRevisableModel(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.instance = RevisionModel.objects.create(text="foo")
-        cls.content_type = ContentType.objects.get_for_model(RevisionModel)
+        cls.instance = RevisableModel.objects.create(text="foo")
+        cls.content_type = ContentType.objects.get_for_model(RevisableModel)
 
     @classmethod
     def create_page(cls):
@@ -61,12 +61,12 @@ class TestRevisionModel(TestCase):
         self.assertEqual(self.instance.get_content_type(), self.content_type)
 
     def test_content_type_with_inheritance(self):
-        instance = RevisionGrandChildModel.objects.create(text="test")
+        instance = RevisableGrandChildModel.objects.create(text="test")
         instance.text = "test updated"
         revision = instance.save_revision()
 
         base_content_type = self.content_type
-        content_type = ContentType.objects.get_for_model(RevisionGrandChildModel)
+        content_type = ContentType.objects.get_for_model(RevisableGrandChildModel)
         revision_from_db = Revision.objects.filter(
             base_content_type=base_content_type,
             content_type=content_type,
@@ -101,7 +101,7 @@ class TestRevisionModel(TestCase):
         revision = self.instance.revisions.first()
         instance = revision.as_object()
 
-        self.assertIsInstance(instance, RevisionModel)
+        self.assertIsInstance(instance, RevisableModel)
         # The instance created from the revision should be updated
         self.assertEqual(instance.text, "updated")
         # Only saving a revision should not update the instance itself

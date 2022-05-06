@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="RevisionModel",
+            name="RevisableModel",
             fields=[
                 (
                     "id",
@@ -28,37 +28,37 @@ class Migration(migrations.Migration):
             bases=(wagtail.models.RevisionMixin, models.Model),
         ),
         migrations.CreateModel(
-            name="RevisionChildModel",
+            name="RevisableChildModel",
             fields=[
                 (
-                    "revisionmodel_ptr",
+                    "revisablemodel_ptr",
                     models.OneToOneField(
                         auto_created=True,
                         on_delete=models.CASCADE,
                         parent_link=True,
                         primary_key=True,
                         serialize=False,
-                        to="tests.revisionmodel",
+                        to="tests.revisablemodel",
                     ),
                 ),
             ],
-            bases=("tests.revisionmodel",),
+            bases=("tests.revisablemodel",),
         ),
         migrations.CreateModel(
-            name="RevisionGrandChildModel",
+            name="RevisableGrandChildModel",
             fields=[
                 (
-                    "revisionchildmodel_ptr",
+                    "revisablechildmodel_ptr",
                     models.OneToOneField(
                         auto_created=True,
                         on_delete=models.CASCADE,
                         parent_link=True,
                         primary_key=True,
                         serialize=False,
-                        to="tests.revisionchildmodel",
+                        to="tests.revisablechildmodel",
                     ),
                 ),
             ],
-            bases=("tests.revisionchildmodel",),
+            bases=("tests.revisablechildmodel",),
         ),
     ]
