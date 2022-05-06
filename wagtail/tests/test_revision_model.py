@@ -15,6 +15,15 @@ class TestRevisionModel(TestCase):
         cls.instance = RevisionModel.objects.create(text="foo")
         cls.content_type = ContentType.objects.get_for_model(RevisionModel)
 
+    @classmethod
+    def create_page(cls):
+        homepage = Page.objects.get(url_path="/home/")
+        hello_page = SimplePage(
+            title="Hello world", slug="hello-world", content="hello"
+        )
+        homepage.add_child(instance=hello_page)
+        return hello_page
+
     def test_can_save_revision(self):
         self.instance.text = "updated"
         revision = self.instance.save_revision()
@@ -69,11 +78,7 @@ class TestRevisionModel(TestCase):
         self.assertEqual(instance.get_content_type(), content_type)
 
     def test_content_type_for_page_model(self):
-        homepage = Page.objects.get(url_path="/home/")
-        hello_page = SimplePage(
-            title="Hello world", slug="hello-world", content="hello"
-        )
-        homepage.add_child(instance=hello_page)
+        hello_page = self.create_page()
         hello_page.content = "Updated world"
         revision = hello_page.save_revision()
 
@@ -88,3 +93,29 @@ class TestRevisionModel(TestCase):
         self.assertEqual(revision, revision_from_db)
         self.assertEqual(hello_page.get_base_content_type(), base_content_type)
         self.assertEqual(hello_page.get_content_type(), content_type)
+
+    def test_as_object(self):
+        self.instance.text = "updated"
+        self.instance.save_revision()
+        self.instance.refresh_from_db()
+        revision = self.instance.revisions.first()
+        instance = revision.as_object()
+
+        self.assertIsInstance(instance, RevisionModel)
+        # The instance created from the revision should be updated
+        self.assertEqual(instance.text, "updated")
+        # Only saving a revision should not update the instance itself
+        self.assertEqual(self.instance.text, "foo")
+
+    def test_as_object_with_page(self):
+        hello_page = self.create_page()
+        hello_page.content = "updated"
+        hello_page.save_revision()
+        hello_page.refresh_from_db()
+        revision = hello_page.revisions.first()
+        instance = revision.as_object()
+
+        # The instance should be of the specific page class.
+        self.assertIsInstance(instance, SimplePage)
+        self.assertEqual(instance.content, "updated")
+        self.assertEqual(hello_page.content, "hello")
