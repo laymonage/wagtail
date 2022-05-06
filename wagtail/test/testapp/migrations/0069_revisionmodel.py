@@ -27,4 +27,38 @@ class Migration(migrations.Migration):
             ],
             bases=(wagtail.models.RevisionMixin, models.Model),
         ),
+        migrations.CreateModel(
+            name="RevisionChildModel",
+            fields=[
+                (
+                    "revisionmodel_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=models.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="tests.revisionmodel",
+                    ),
+                ),
+            ],
+            bases=("tests.revisionmodel",),
+        ),
+        migrations.CreateModel(
+            name="RevisionGrandChildModel",
+            fields=[
+                (
+                    "revisionchildmodel_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=models.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="tests.revisionchildmodel",
+                    ),
+                ),
+            ],
+            bases=("tests.revisionchildmodel",),
+        ),
     ]

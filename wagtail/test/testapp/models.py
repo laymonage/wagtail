@@ -928,6 +928,14 @@ class RevisionModel(RevisionMixin, models.Model):
     text = models.TextField()
 
 
+class RevisionChildModel(RevisionModel):
+    pass
+
+
+class RevisionGrandChildModel(RevisionChildModel):
+    pass
+
+
 class StandardIndex(Page):
     """Index for the site"""
 
