@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
-from wagtail.models import Page, Revision, get_default_page_content_type
 
+from wagtail.models import Page, Revision, get_default_page_content_type
 from wagtail.test.testapp.models import (
     RevisableGrandChildModel,
     RevisableModel,
