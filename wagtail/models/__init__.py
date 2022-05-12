@@ -257,17 +257,19 @@ class RevisionMixin:
         return self.revisions.order_by("-created_at", "-id").first()
 
     def serializable_data(self):
-        if isinstance(self, ClusterableModel):
+        try:
             return super().serializable_data()
-        return get_serializable_data_for_fields(self)
+        except AttributeError:
+            return get_serializable_data_for_fields(self)
 
     @classmethod
     def from_serializable_data(cls, data, check_fks=True, strict_fks=False):
-        if issubclass(cls, ClusterableModel):
+        try:
             return super().from_serializable_data(data, check_fks, strict_fks)
-        return model_from_serializable_data(
-            cls, data, check_fks=check_fks, strict_fks=strict_fks
-        )
+        except AttributeError:
+            return model_from_serializable_data(
+                cls, data, check_fks=check_fks, strict_fks=strict_fks
+            )
 
     def with_content_json(self, content):
         """
