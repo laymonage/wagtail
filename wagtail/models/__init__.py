@@ -256,6 +256,9 @@ class RevisionMixin:
     def get_latest_revision(self):
         return self.revisions.order_by("-created_at", "-id").first()
 
+    def get_latest_revision_as_object(self):
+        return self.get_latest_revision().as_object()
+
     def serializable_data(self):
         try:
             return super().serializable_data()
@@ -1111,6 +1114,16 @@ class Page(
         return revision
 
     def get_latest_revision_as_page(self):
+        warnings.warn(
+            "Pages should use .get_latest_revision_as_object() instead of "
+            ".get_latest_revision_as_page() to retrieve the latest revision as a "
+            "Page instance.",
+            category=RemovedInWagtail50Warning,
+            stacklevel=2,
+        )
+        return self.get_latest_revision_as_object()
+
+    def get_latest_revision_as_object(self):
         if not self.has_unpublished_changes:
             # Use the live database copy in preference to the revision record, as:
             # 1) this will pick up any changes that have been made directly to the model,
