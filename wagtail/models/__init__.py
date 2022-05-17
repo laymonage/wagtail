@@ -284,7 +284,7 @@ class RevisionMixin:
         """
         return self.from_serializable_data(content)
 
-    def save_revision(
+    def _before_save_revision(
         self,
         user=None,
         submitted_for_moderation=False,
@@ -294,32 +294,23 @@ class RevisionMixin:
         previous_revision=None,
         clean=True,
     ):
-        """
-        Creates and saves a revision.
-        :param user: the user performing the action
-        :param submitted_for_moderation: indicates whether the object was submitted for moderation
-        :param approved_go_live_at: the date and time the revision is approved to go live
-        :param changed: indicates whether there were any content changes
-        :param log_action: flag for logging the action. Pass False to skip logging. Can be passed an action string.
-            Defaults to 'wagtail.edit' when no 'previous_revision' param is passed, otherwise 'wagtail.revert'
-        :param previous_revision: indicates a revision reversal. Should be set to the previous revision instance
-        :param clean: Set this to False to skip cleaning object content before saving this revision
-        :return: the newly created revision
-        """
         if clean:
             self.full_clean()
 
-        # Create revision
-        revision = Revision.objects.create(
-            content_object=self,
-            base_content_type=get_default_page_content_type(),
-            submitted_for_moderation=submitted_for_moderation,
-            user=user,
-            approved_go_live_at=approved_go_live_at,
-            content=self.serializable_data(),
+    def _after_save_revision(
+        self,
+        revision,
+        user=None,
+        submitted_for_moderation=False,
+        approved_go_live_at=None,
+        changed=True,
+        log_action=False,
+        previous_revision=None,
+        clean=True,
+    ):
+        logger.info(
+            'Edited: "%s" pk=%d revision_id=%d', str(self), self.pk, revision.id
         )
-
-        # Log
         if log_action:
             if not previous_revision:
                 log(
@@ -349,6 +340,65 @@ class RevisionMixin:
                     revision=revision,
                     content_changed=changed,
                 )
+
+    def save_revision(
+        self,
+        user=None,
+        submitted_for_moderation=False,
+        approved_go_live_at=None,
+        changed=True,
+        log_action=False,
+        previous_revision=None,
+        clean=True,
+    ):
+        """
+        Creates and saves a revision.
+        :param user: the user performing the action
+        :param submitted_for_moderation: indicates whether the object was submitted for moderation
+        :param approved_go_live_at: the date and time the revision is approved to go live
+        :param changed: indicates whether there were any content changes
+        :param log_action: flag for logging the action. Pass False to skip logging. Can be passed an action string.
+            Defaults to 'wagtail.edit' when no 'previous_revision' param is passed, otherwise 'wagtail.revert'
+        :param previous_revision: indicates a revision reversal. Should be set to the previous revision instance
+        :param clean: Set this to False to skip cleaning object content before saving this revision
+        :return: the newly created revision
+        """
+        self._before_save_revision(
+            user=user,
+            submitted_for_moderation=submitted_for_moderation,
+            approved_go_live_at=approved_go_live_at,
+            changed=changed,
+            log_action=log_action,
+            previous_revision=previous_revision,
+            clean=clean,
+        )
+
+        # Create revision
+        revision = Revision.objects.create(
+            content_type=self.get_content_type(),
+            base_content_type=self.get_base_content_type(),
+            object_id=self.pk,
+            submitted_for_moderation=submitted_for_moderation,
+            user=user,
+            approved_go_live_at=approved_go_live_at,
+            content=self.serializable_data(),
+        )
+        # Prevent fetching a fresh object instance to avoid losing changes made
+        # to the instance. This is necessary to prevent fetching a fresh page
+        # instance when changing first_published_at.
+        # Ref: https://github.com/wagtail/wagtail/pull/3498
+        revision.content_object = self
+
+        self._after_save_revision(
+            revision,
+            user=user,
+            submitted_for_moderation=submitted_for_moderation,
+            approved_go_live_at=approved_go_live_at,
+            changed=changed,
+            log_action=log_action,
+            previous_revision=previous_revision,
+            clean=clean,
+        )
 
         return revision
 
@@ -1013,7 +1063,7 @@ class Page(
         # in a fixture or migration that didn't explicitly handle draft_title)
         return self.draft_title or self.title
 
-    def save_revision(
+    def _before_save_revision(
         self,
         user=None,
         submitted_for_moderation=False,
@@ -1033,27 +1083,26 @@ class Page(
         if clean:
             self.full_clean()
 
-        new_comments = getattr(self, COMMENTS_RELATION_NAME).filter(pk__isnull=True)
-        for comment in new_comments:
+        self._new_comments = getattr(self, COMMENTS_RELATION_NAME).filter(
+            pk__isnull=True
+        )
+        for comment in self._new_comments:
             # We need to ensure comments have an id in the revision, so positions can be identified correctly
             comment.save()
 
-        # Create revision
-        revision = Revision.objects.create(
-            content_type=self.get_content_type(),
-            base_content_type=self.get_base_content_type(),
-            object_id=self.pk,
-            submitted_for_moderation=submitted_for_moderation,
-            user=user,
-            approved_go_live_at=approved_go_live_at,
-            content=self.serializable_data(),
-        )
-        # This is necessary to prevent fetching a fresh page instance when
-        # changing first_published_at.
-        # Ref: https://github.com/wagtail/wagtail/pull/3498
-        revision.content_object = self
+    def _after_save_revision(
+        self,
+        revision,
+        user=None,
+        submitted_for_moderation=False,
+        approved_go_live_at=None,
+        changed=True,
+        log_action=False,
+        previous_revision=None,
+        clean=True,
+    ):
 
-        for comment in new_comments:
+        for comment in self._new_comments:
             comment.revision_created = revision
 
         update_fields = [COMMENTS_RELATION_NAME]
@@ -1113,8 +1162,6 @@ class Page(
                 self.id,
                 revision.id,
             )
-
-        return revision
 
     def get_latest_revision_as_page(self):
         warnings.warn(
