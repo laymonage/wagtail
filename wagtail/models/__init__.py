@@ -257,7 +257,10 @@ class RevisionMixin:
         return self.revisions.order_by("-created_at", "-id").first()
 
     def get_latest_revision_as_object(self):
-        return self.get_latest_revision().as_object()
+        latest_revision = self.get_latest_revision()
+        if latest_revision:
+            return latest_revision.as_object()
+        return self
 
     def serializable_data(self):
         try:
