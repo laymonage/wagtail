@@ -7,7 +7,7 @@ import wagtail.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("tests", "0068_index_customimage_file_hash"),
+        ("tests", "0071_alter_customrestaurantimage_file_hash"),
     ]
 
     operations = [
