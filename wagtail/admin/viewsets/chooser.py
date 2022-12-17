@@ -4,6 +4,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
 from wagtail.admin.forms.models import register_form_field_override
+from wagtail.admin.utils import get_object_icon
 from wagtail.admin.views.generic import chooser as chooser_views
 from wagtail.admin.widgets.chooser import BaseChooser
 from wagtail.blocks import ChooserBlock
@@ -19,7 +20,6 @@ class ChooserViewSet(ViewSet):
 
     model = None
 
-    icon = "snippet"  #: The icon to use in the header of the chooser modal, and on the chooser widget
     choose_one_text = _(
         "Choose"
     )  #: Label for the 'choose' button in the chooser widget when choosing an initial item
@@ -95,7 +95,7 @@ class ChooserViewSet(ViewSet):
             chosen_multiple_url_name=self.get_url_name("chosen_multiple"),
             results_url_name=self.get_url_name("choose_results"),
             create_url_name=self.get_url_name("create"),
-            icon=self.icon,
+            icon=get_object_icon(self.model, self.icon),
             page_title=self.page_title,
             per_page=self.per_page,
             creation_form_class=self.creation_form_class,
@@ -182,7 +182,7 @@ class ChooserViewSet(ViewSet):
                 "choose_another_text": self.choose_another_text,
                 "link_to_chosen_text": self.edit_item_text,
                 "chooser_modal_url_name": self.get_url_name("choose"),
-                "icon": self.icon,
+                "icon": get_object_icon(self.model, self.icon),
             },
         )
 
@@ -198,7 +198,7 @@ class ChooserViewSet(ViewSet):
             "Meta",
             (self.base_block_class._meta_class,),
             {
-                "icon": self.icon,
+                "icon": get_object_icon(self.model, self.icon),
             },
         )
         cls = type(

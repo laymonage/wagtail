@@ -52,3 +52,11 @@ def get_user_display_name(user):
         # we were passed None or something else that isn't a valid user object; return
         # empty string to replicate the behaviour of {{ user.get_full_name|default:user.get_username }}
         return ""
+
+
+def get_object_icon(model, default):
+    """
+    Helper function to standardise how an object icon is obtained,
+    intended primarily for Snippets.
+    """
+    return getattr(model, "admin_icon", default)

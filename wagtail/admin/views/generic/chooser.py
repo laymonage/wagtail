@@ -123,7 +123,6 @@ class BaseChooseView(
     chosen_url_name = None
     chosen_multiple_url_name = None
     results_url_name = None
-    icon = "snippet"
     page_title = _("Choose")
     filter_form_class = None
     template_name = "wagtailadmin/generic/chooser/chooser.html"
