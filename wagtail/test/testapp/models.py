@@ -1153,6 +1153,24 @@ class StandardIndex(Page):
     promote_panels = []
 
 
+class AdvertWithIcon(ClusterableModel):
+    url = models.URLField(null=True, blank=True)
+    text = models.CharField(max_length=255)
+
+    panels = [
+        FieldPanel("url"),
+        FieldPanel("text"),
+    ]
+
+    admin_icon = "cross"
+
+    def __str__(self):
+        return self.text
+
+
+register_snippet(AdvertWithIcon)
+
+
 class StandardChild(Page):
     pass
 
@@ -1266,6 +1284,16 @@ class SnippetChooserModelWithCustomPrimaryKey(models.Model):
 
     panels = [
         FieldPanel("advertwithcustomprimarykey"),
+    ]
+
+
+class SnippetChooserModelWithIcon(models.Model):
+    advertwithicon = models.ForeignKey(
+        AdvertWithIcon, help_text="help text", on_delete=models.CASCADE
+    )
+
+    panels = [
+        FieldPanel("advertwithicon"),
     ]
 
 
