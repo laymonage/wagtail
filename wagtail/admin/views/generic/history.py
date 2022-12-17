@@ -5,11 +5,11 @@ from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 
-from wagtail.admin.views.generic.base import BaseObjectMixin
+from wagtail.admin.views.generic.base import BaseObjectMixin, WagtailAdminTemplateMixin
 from wagtail.models import Revision, TaskState, WorkflowState
 
 
-class WorkflowHistoryView(BaseObjectMixin, TemplateView):
+class WorkflowHistoryView(BaseObjectMixin, WagtailAdminTemplateMixin, TemplateView):
     template_name = "wagtailadmin/shared/workflow_history/index.html"
     page_kwarg = "p"
     workflow_history_url_name = None
