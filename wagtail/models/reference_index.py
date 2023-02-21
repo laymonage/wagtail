@@ -10,6 +10,9 @@ from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel, get_all_child_relations
 from taggit.models import ItemBase
 
+from wagtail.blocks import StreamBlock
+from wagtail.fields import StreamField
+
 
 class ReferenceGroups:
     """
@@ -510,6 +513,16 @@ class ReferenceIndex(models.Model):
         if isinstance(field, models.ManyToOneRel):
             child_field = field.related_model._meta.get_field(model_path_components[2])
             return capfirst(child_field.verbose_name)
+        elif isinstance(field, StreamField):
+            label = f"{capfirst(field.verbose_name)}"
+            block = field.stream_block
+            block_idx = 1
+            while isinstance(block, StreamBlock):
+                block = block.child_blocks[model_path_components[block_idx]]
+                block_label = capfirst(block.label)
+                label += f" → {block_label}"
+                block_idx += 1
+            return label
         else:
             try:
                 field_name = field.verbose_name
