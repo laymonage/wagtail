@@ -6,6 +6,7 @@ from django.apps import apps
 from django.contrib.admin.utils import quote, unquote
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import ForeignKey
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import path, re_path, reverse
@@ -15,6 +16,7 @@ from django.utils.translation import gettext_lazy, ngettext
 
 from wagtail.admin.admin_url_finder import register_admin_url_finder
 from wagtail.admin.filters import DateRangePickerWidget, WagtailFilterSet
+from wagtail.admin.forms.models import register_form_field_override
 from wagtail.admin.panels import get_edit_handler
 from wagtail.admin.ui.tables import (
     BulkActionsCheckboxColumn,
@@ -51,6 +53,7 @@ from wagtail.snippets.models import SnippetAdminURLFinder, get_snippet_models
 from wagtail.snippets.permissions import user_can_edit_snippet_type
 from wagtail.snippets.side_panels import SnippetSidePanels
 from wagtail.snippets.views.chooser import SnippetChooserViewSet
+from wagtail.snippets.widgets import AdminSnippetChooser
 
 
 # == Helper functions ==
@@ -1166,6 +1169,14 @@ class SnippetViewSet(ViewSet):
 
         return urlpatterns + legacy_redirects
 
+    def register_chooser_widget(self):
+        # Set up admin model forms to use AdminSnippetChooser for any ForeignKey to this model
+        register_form_field_override(
+            ForeignKey,
+            to=self.model,
+            override={"widget": AdminSnippetChooser(model=self.model)},
+        )
+
     def on_register(self):
         super().on_register()
         url_finder_class = type(
@@ -1174,3 +1185,5 @@ class SnippetViewSet(ViewSet):
         register_admin_url_finder(self.model, url_finder_class)
 
         viewsets.register(self.chooser_viewset)
+
+        self.register_chooser_widget()
