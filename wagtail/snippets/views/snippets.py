@@ -1198,7 +1198,7 @@ class SnippetViewSet(ViewSet):
         register_form_field_override(
             ForeignKey,
             to=self.model,
-            override={"widget": AdminSnippetChooser(model=self.model)},
+            override={"widget": AdminSnippetChooser(model=self.model, icon=self.icon)},
         )
 
     def register_model_check(self):
