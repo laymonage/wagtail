@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 import django_filters
 from django.apps import apps
 from django.contrib.admin.utils import quote, unquote
+from django.core import checks
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import ForeignKey
@@ -15,6 +16,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy, ngettext
 
 from wagtail.admin.admin_url_finder import register_admin_url_finder
+from wagtail.admin.checks import check_panels_in_model
 from wagtail.admin.filters import DateRangePickerWidget, WagtailFilterSet
 from wagtail.admin.forms.models import register_form_field_override
 from wagtail.admin.panels import get_edit_handler
@@ -1177,6 +1179,12 @@ class SnippetViewSet(ViewSet):
             override={"widget": AdminSnippetChooser(model=self.model)},
         )
 
+    def register_model_check(self):
+        def snippets_model_check(app_configs, **kwargs):
+            return check_panels_in_model(self.model, "snippets")
+
+        checks.register(snippets_model_check, "panels")
+
     def on_register(self):
         super().on_register()
         url_finder_class = type(
@@ -1187,3 +1195,4 @@ class SnippetViewSet(ViewSet):
         viewsets.register(self.chooser_viewset)
 
         self.register_chooser_widget()
+        self.register_model_check()
