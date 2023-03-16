@@ -566,8 +566,8 @@ class ReferenceIndex(models.Model):
         """
         Returns a string describing the field that this reference was extracted from.
 
-        At the moment, this will return the label of the model field that the reference
-        was extracted from.
+        For StreamField, this returns the label of the block that contains the reference.
+        For other fields, this returns the verbose name of the field.
         """
         field = self.source_field
         model_path_components = self.model_path.split(".")
