@@ -278,10 +278,9 @@ class DeleteView(generic.DeleteView):
         )
 
     def get_success_message(self):
-        return (
-            _("Document '%(document_title)s' deleted.")
-            % {"document_title": self.object.title},
-        )
+        return _("Document '%(document_title)s' deleted.") % {
+            "document_title": self.object.title
+        }
 
 
 class UsageView(generic.UsageView):
