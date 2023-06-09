@@ -99,8 +99,7 @@ class AgingPagesView(PageReportView):
         )
         self.queryset = (
             UserPagePermissionsProxy(self.request.user)
-            .publishable_pages()
-            .exclude(last_published_at__isnull=True)
+            .publishable_pages.exclude(last_published_at__isnull=True)
             .prefetch_workflow_states()
             .select_related("content_type")
             .annotate_approved_schedule()

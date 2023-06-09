@@ -101,11 +101,7 @@ class PagesForModerationPanel(Component):
         request = parent_context["request"]
         context = super().get_context_data(parent_context)
         user_perms = UserPagePermissionsProxy(request.user)
-        context["page_revisions_for_moderation"] = (
-            user_perms.revisions_for_moderation()
-            .select_related("user")
-            .order_by("-created_at")
-        )
+        context["page_revisions_for_moderation"] = user_perms.revisions_for_moderation
         context["request"] = request
         context["csrf_token"] = parent_context["csrf_token"]
         return context
@@ -226,7 +222,7 @@ class LockedPagesPanel(Component):
                 ),
                 "can_remove_locks": UserPagePermissionsProxy(
                     request.user
-                ).can_remove_locks(),
+                ).can_remove_locks,
                 "request": request,
                 "csrf_token": parent_context["csrf_token"],
             }

@@ -7,7 +7,6 @@ from wagtail.permission_policies.base import BasePermissionPolicy
 
 class PagePermissionPolicy(BasePermissionPolicy):
     perm_cache_name = "_page_perm_cache"
-    _explorable_root_instance_cache_name = "_explorable_root_instance_cache"
 
     def __init__(self, model=Page):
         super().__init__(model=model)
@@ -141,8 +140,10 @@ class PagePermissionPolicy(BasePermissionPolicy):
         )
 
     def instances_with_direct_explore_permission(self, user):
+        if not user.is_active:
+            return []
         # Get all pages that the user has direct add/edit/publish/lock permission on
-        if user.is_superuser:
+        elif user.is_superuser:
             # superuser has implicit permission on the root node
             return Page.objects.filter(depth=1)
         else:
@@ -153,10 +154,6 @@ class PagePermissionPolicy(BasePermissionPolicy):
             ]
 
     def explorable_root_instance(self, user):
-        # This method is used all around the admin via get_explorable_root_page,
-        # so cache the result on the user for the duration of the request
-        if hasattr(user, self._explorable_root_instance_cache_name):
-            return getattr(user, self._explorable_root_instance_cache_name)
         pages = self.instances_with_direct_explore_permission(user)
         try:
             root_page = Page.objects.first_common_ancestor_of(
@@ -164,7 +161,6 @@ class PagePermissionPolicy(BasePermissionPolicy):
             )
         except Page.DoesNotExist:
             root_page = None
-        setattr(user, self._explorable_root_instance_cache_name, root_page)
         return root_page
 
     def explorable_instances(self, user):

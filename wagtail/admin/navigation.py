@@ -1,14 +1,14 @@
 from django.conf import settings
 
-from wagtail.permission_policies.pages import PagePermissionPolicy
+from wagtail.models import UserPagePermissionsProxy
 
 
 def get_pages_with_direct_explore_permission(user):
-    return PagePermissionPolicy().instances_with_direct_explore_permission(user)
+    return UserPagePermissionsProxy(user).pages_with_direct_explore_permission
 
 
 def get_explorable_root_page(user):
-    return PagePermissionPolicy().explorable_root_instance(user)
+    return UserPagePermissionsProxy(user).explorable_root_page
 
 
 def get_site_for_user(user):

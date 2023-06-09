@@ -2929,13 +2929,22 @@ class UserPagePermissionsProxy:
     """Helper object that encapsulates all the page permission rules that this user has
     across the page hierarchy."""
 
-    def __init__(self, user):
+    def __new__(cls, user):
         from wagtail.permission_policies.pages import PagePermissionPolicy
 
+        self = getattr(user, "_page_permissions_proxy", None)
+        if self:
+            return self
+
+        self = super().__new__(cls)
         self.user = user
         self.permission_policy = PagePermissionPolicy()
         self.permissions = self.permission_policy.get_cached_permissions_for_user(user)
 
+        user._page_permissions_proxy = self
+        return self
+
+    @cached_property
     def revisions_for_moderation(self):
         """Return a queryset of page revisions awaiting moderation that this user has publish permission on"""
 
@@ -2958,10 +2967,15 @@ class UserPagePermissionsProxy:
             only_my_sections = only_my_sections | Q(path__startswith=page_path)
 
         # return the filtered queryset
-        return Revision.page_revisions.submitted().filter(
-            object_id__in=Page.objects.filter(only_my_sections).values_list(
-                Cast("pk", output_field=models.CharField()), flat=True
+        return (
+            Revision.page_revisions.submitted()
+            .filter(
+                object_id__in=Page.objects.filter(only_my_sections).values_list(
+                    Cast("pk", output_field=models.CharField()), flat=True
+                )
             )
+            .select_related("user")
+            .order_by("-created_at")
         )
 
     def for_page(self, page):
@@ -2969,6 +2983,7 @@ class UserPagePermissionsProxy:
         permission to perform specific tasks on the given page"""
         return PagePermissionTester(self, page)
 
+    @cached_property
     def explorable_pages(self):
         """Return a queryset of pages that the user has access to view in the
         explorer (e.g. add/edit/publish permission). Includes all pages with
@@ -2976,26 +2991,53 @@ class UserPagePermissionsProxy:
         order to enable navigation in the explorer)"""
         return self.permission_policy.explorable_instances(self.user)
 
+    @cached_property
+    def pages_with_direct_explore_permission(self):
+        return self.permission_policy.instances_with_direct_explore_permission(
+            self.user
+        )
+
+    @cached_property
+    def explorable_root_page(self):
+        return self.permission_policy.explorable_root_instance(self.user)
+
+    @cached_property
+    def can_explore(self):
+        return self.explorable_root_page is not None
+
+    @cached_property
     def editable_pages(self):
         """Return a queryset of the pages that this user has permission to edit"""
         return self.permission_policy.instances_user_has_permission_for(
             self.user, "edit"
         )
 
+    @cached_property
     def can_edit_pages(self):
         """Return True if the user has permission to edit any pages"""
-        return self.editable_pages().exists()
+        # If the editable_pages queryset has been evaluated,
+        # we can just check if it's empty instead of doing an exists() query.
+        if self.editable_pages._result_cache is not None:
+            return bool(self.editable_pages)
+        return self.editable_pages.exists()
 
+    @cached_property
     def publishable_pages(self):
         """Return a queryset of the pages that this user has permission to publish"""
         return self.permission_policy.instances_user_has_permission_for(
             self.user, "publish"
         )
 
+    @cached_property
     def can_publish_pages(self):
         """Return True if the user has permission to publish any pages"""
-        return self.publishable_pages().exists()
+        # If the publishable_pages queryset has been evaluated,
+        # we can just check if it's empty instead of doing an exists() query.
+        if self.publishable_pages._result_cache is not None:
+            return bool(self.publishable_pages)
+        return self.publishable_pages.exists()
 
+    @cached_property
     def can_remove_locks(self):
         """Returns True if the user has permission to unlock pages they have not locked"""
         return self.permission_policy.user_has_any_permission(self.user, "unlock")
@@ -4438,9 +4480,9 @@ class PageLogEntryManager(BaseLogEntryManager):
 
     def viewable_by_user(self, user):
         q = Q(
-            page__in=UserPagePermissionsProxy(user)
-            .explorable_pages()
-            .values_list("pk", flat=True)
+            page__in=UserPagePermissionsProxy(user).explorable_pages.values_list(
+                "pk", flat=True
+            )
         )
 
         root_page_permissions = Page.get_first_root_node().permissions_for_user(user)
