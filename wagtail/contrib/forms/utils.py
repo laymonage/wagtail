@@ -34,7 +34,7 @@ def get_forms_for_user(user):
     """
     Return a queryset of form pages that this user is allowed to access the submissions for
     """
-    editable_forms = UserPagePermissionsProxy(user).editable_pages
+    editable_forms = UserPagePermissionsProxy(user).editable_pages()
     editable_forms = editable_forms.filter(content_type__in=get_form_types())
 
     # Apply hooks

@@ -419,10 +419,10 @@ class TestPagePermission(TestCase):
         )
 
         user_perms = UserPagePermissionsProxy(event_editor)
-        editable_pages = user_perms.editable_pages
-        can_edit_pages = user_perms.can_edit_pages
-        publishable_pages = user_perms.publishable_pages
-        can_publish_pages = user_perms.can_publish_pages
+        editable_pages = user_perms.editable_pages()
+        can_edit_pages = user_perms.can_edit_pages()
+        publishable_pages = user_perms.publishable_pages()
+        can_publish_pages = user_perms.can_publish_pages()
 
         self.assertFalse(editable_pages.filter(id=homepage.id).exists())
         self.assertTrue(editable_pages.filter(id=christmas_page.id).exists())
@@ -454,7 +454,7 @@ class TestPagePermission(TestCase):
         about_us_page = Page.objects.get(url_path="/home/about-us/")
 
         user_perms = UserPagePermissionsProxy(event_editor)
-        explorable_pages = user_perms.explorable_pages
+        explorable_pages = user_perms.explorable_pages()
 
         # Verify all pages below /home/events/ are explorable
         self.assertTrue(explorable_pages.filter(id=christmas_page.id).exists())
@@ -495,7 +495,7 @@ class TestPagePermission(TestCase):
         businessy_events = Page.objects.get(url_path="/home/events/businessy-events/")
         events_page = Page.objects.get(url_path="/home/events/")
 
-        explorable_pages = user_perms.explorable_pages
+        explorable_pages = user_perms.explorable_pages()
 
         self.assertTrue(explorable_pages.filter(id=about_us_page.id).exists())
         self.assertTrue(explorable_pages.filter(id=businessy_events.id).exists())
@@ -515,10 +515,10 @@ class TestPagePermission(TestCase):
         )
 
         user_perms = UserPagePermissionsProxy(event_moderator)
-        editable_pages = user_perms.editable_pages
-        can_edit_pages = user_perms.can_edit_pages
-        publishable_pages = user_perms.publishable_pages
-        can_publish_pages = user_perms.can_publish_pages
+        editable_pages = user_perms.editable_pages()
+        can_edit_pages = user_perms.can_edit_pages()
+        publishable_pages = user_perms.publishable_pages()
+        can_publish_pages = user_perms.can_publish_pages()
 
         self.assertFalse(editable_pages.filter(id=homepage.id).exists())
         self.assertTrue(editable_pages.filter(id=christmas_page.id).exists())
@@ -548,10 +548,10 @@ class TestPagePermission(TestCase):
         )
 
         user_perms = UserPagePermissionsProxy(user)
-        editable_pages = user_perms.editable_pages
-        can_edit_pages = user_perms.can_edit_pages
-        publishable_pages = user_perms.publishable_pages
-        can_publish_pages = user_perms.can_publish_pages
+        editable_pages = user_perms.editable_pages()
+        can_edit_pages = user_perms.can_edit_pages()
+        publishable_pages = user_perms.publishable_pages()
+        can_publish_pages = user_perms.can_publish_pages()
 
         self.assertFalse(editable_pages.filter(id=homepage.id).exists())
         self.assertFalse(editable_pages.filter(id=christmas_page.id).exists())
@@ -583,10 +583,10 @@ class TestPagePermission(TestCase):
         )
 
         user_perms = UserPagePermissionsProxy(user)
-        editable_pages = user_perms.editable_pages
-        can_edit_pages = user_perms.can_edit_pages
-        publishable_pages = user_perms.publishable_pages
-        can_publish_pages = user_perms.can_publish_pages
+        editable_pages = user_perms.editable_pages()
+        can_edit_pages = user_perms.can_edit_pages()
+        publishable_pages = user_perms.publishable_pages()
+        can_publish_pages = user_perms.can_publish_pages()
 
         self.assertTrue(editable_pages.filter(id=homepage.id).exists())
         self.assertTrue(editable_pages.filter(id=christmas_page.id).exists())
@@ -616,10 +616,10 @@ class TestPagePermission(TestCase):
         )
 
         user_perms = UserPagePermissionsProxy(user)
-        editable_pages = user_perms.editable_pages
-        can_edit_pages = user_perms.can_edit_pages
-        publishable_pages = user_perms.publishable_pages
-        can_publish_pages = user_perms.can_publish_pages
+        editable_pages = user_perms.editable_pages()
+        can_edit_pages = user_perms.can_edit_pages()
+        publishable_pages = user_perms.publishable_pages()
+        can_publish_pages = user_perms.can_publish_pages()
 
         self.assertFalse(editable_pages.filter(id=homepage.id).exists())
         self.assertFalse(editable_pages.filter(id=christmas_page.id).exists())

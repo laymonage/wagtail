@@ -908,7 +908,7 @@ def register_core_features(features):
 
 class LockedPagesMenuItem(MenuItem):
     def is_shown(self, request):
-        return UserPagePermissionsProxy(request.user).can_remove_locks
+        return UserPagePermissionsProxy(request.user).can_remove_locks()
 
 
 class WorkflowReportMenuItem(MenuItem):
@@ -918,7 +918,7 @@ class WorkflowReportMenuItem(MenuItem):
 
 class SiteHistoryReportMenuItem(MenuItem):
     def is_shown(self, request):
-        return UserPagePermissionsProxy(request.user).can_explore
+        return get_explorable_root_page(request.user) is not None
 
 
 class AgingPagesReportMenuItem(MenuItem):

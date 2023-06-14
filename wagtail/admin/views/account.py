@@ -164,7 +164,7 @@ class NotificationsSettingsPanel(BaseSettingsPanel):
     def is_active(self):
         # Hide the panel if the user can't edit or publish pages
         user_perms = UserPagePermissionsProxy(self.request.user)
-        if not user_perms.can_edit_pages and not user_perms.can_publish_pages:
+        if not user_perms.can_edit_pages() and not user_perms.can_publish_pages():
             return False
 
         # Hide the panel if there are no notification preferences

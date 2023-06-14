@@ -39,6 +39,6 @@ class ForExplorerFilter(BaseFilterBackend):
                 queryset = hook(parent_page, queryset, request)
 
             user_perms = UserPagePermissionsProxy(request.user)
-            queryset = user_perms.explorable_pages & queryset
+            queryset = user_perms.explorable_pages() & queryset
 
         return queryset

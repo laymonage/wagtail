@@ -23,9 +23,9 @@ class NotificationPreferencesForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         user_perms = UserPagePermissionsProxy(self.instance.user)
-        if not user_perms.can_publish_pages:
+        if not user_perms.can_publish_pages():
             del self.fields["submitted_notifications"]
-        if not user_perms.can_edit_pages:
+        if not user_perms.can_edit_pages():
             del self.fields["approved_notifications"]
             del self.fields["rejected_notifications"]
             del self.fields["updated_comments_notifications"]

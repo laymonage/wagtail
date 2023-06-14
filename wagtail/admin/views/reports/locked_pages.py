@@ -46,7 +46,7 @@ class LockedPagesView(PageReportView):
     def get_queryset(self):
         pages = (
             (
-                UserPagePermissionsProxy(self.request.user).editable_pages
+                UserPagePermissionsProxy(self.request.user).editable_pages()
                 | Page.objects.filter(locked_by=self.request.user)
             )
             .filter(locked=True)
@@ -60,6 +60,6 @@ class LockedPagesView(PageReportView):
         return super().get_queryset()
 
     def dispatch(self, request, *args, **kwargs):
-        if not UserPagePermissionsProxy(request.user).can_remove_locks:
+        if not UserPagePermissionsProxy(request.user).can_remove_locks():
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)

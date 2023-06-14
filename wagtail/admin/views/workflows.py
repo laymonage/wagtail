@@ -309,7 +309,7 @@ def usage(request, pk):
 
     perms = UserPagePermissionsProxy(request.user)
 
-    pages = workflow.all_pages() & perms.editable_pages
+    pages = workflow.all_pages() & perms.editable_pages()
     paginator = Paginator(pages, per_page=10)
     pages = paginator.get_page(request.GET.get("p"))
 
