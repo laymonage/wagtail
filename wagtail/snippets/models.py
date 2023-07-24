@@ -142,6 +142,9 @@ def register_deferred_snippets():
 
 
 def create_extra_permissions(*args, using=DEFAULT_DB_ALIAS, **kwargs):
+    if using == "trackings":
+        return
+
     def get_permission(model, content_type, name):
         return Permission(
             content_type=content_type,

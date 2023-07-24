@@ -48,6 +48,13 @@ format: format-server format-client
 test:
 	python runtests.py
 
+runserver:
+	django-admin runserver --settings=wagtail.test.settings
+
+profile:
+	python -m cProfile -o profile.out runtests.py --keepdb
+	pyprof2calltree -k -i profile.out
+
 coverage:
 	coverage run --source wagtail runtests.py
 	coverage report -m

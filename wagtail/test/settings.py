@@ -3,7 +3,7 @@ import os
 from django.contrib.messages import constants as message_constants
 from django.utils.translation import gettext_lazy as _
 
-DEBUG = False
+DEBUG = True
 WAGTAIL_ROOT = os.path.dirname(os.path.dirname(__file__))
 WAGTAILADMIN_BASE_URL = "http://testserver"
 STATIC_ROOT = os.path.join(WAGTAIL_ROOT, "tests", "test-static")
@@ -258,4 +258,16 @@ MESSAGE_TAGS = {
     message_constants.SUCCESS: "my-custom-tag",
     message_constants.WARNING: "my-custom-tag",
     message_constants.ERROR: "my-custom-tag",
+}
+INSTALLED_APPS.append("dj_tracker")
+DATABASES["trackings"] = {
+    "ENGINE": "django.db.backends.sqlite3",
+    "NAME": WAGTAIL_ROOT + "/../trackings.db",
+}
+DATABASE_ROUTERS = ["dj_tracker.db_router.DjTrackerRouter"]
+TEST_RUNNER = "dj_tracker.test.DjTrackerRunner"
+DJ_TRACKER = {
+    "FIELD_DESCRIPTORS": {
+        "Creator": "dj_tracker.field_descriptors.EditableFieldDescriptor"
+    }
 }
