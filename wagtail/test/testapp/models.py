@@ -1359,11 +1359,7 @@ class SnippetChooserModel(models.Model):
     full_featured = models.ForeignKey(
         FullFeaturedSnippet, on_delete=models.CASCADE, null=True, blank=True
     )
-
-    panels = [
-        FieldPanel("advert"),
-        FieldPanel("full_featured"),
-    ]
+    text = models.TextField(default="", blank=True)
 
 
 class SnippetChooserModelWithCustomPrimaryKey(models.Model):

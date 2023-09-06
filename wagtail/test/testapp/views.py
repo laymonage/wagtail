@@ -11,12 +11,15 @@ from django.utils.translation import gettext_lazy
 from wagtail.admin import messages
 from wagtail.admin.auth import user_passes_test
 from wagtail.admin.filters import WagtailFilterSet
+from wagtail.admin.panels import FieldPanel
 from wagtail.admin.ui.tables import BooleanColumn, UpdatedAtColumn
 from wagtail.admin.views.generic import DeleteView, EditView, IndexView
 from wagtail.admin.viewsets.base import ViewSet, ViewSetGroup
 from wagtail.admin.viewsets.chooser import ChooserViewSet
 from wagtail.admin.viewsets.model import ModelViewSet, ModelViewSetGroup
 from wagtail.contrib.forms.views import SubmissionsListView
+from wagtail.snippets.models import register_snippet
+from wagtail.snippets.views.snippets import SnippetViewSet
 from wagtail.test.testapp.models import (
     Advert,
     FeatureCompleteToy,
@@ -24,6 +27,7 @@ from wagtail.test.testapp.models import (
     JSONMinMaxCountStreamModel,
     JSONStreamModel,
     ModelWithStringTypePrimaryKey,
+    SnippetChooserModel,
 )
 
 
@@ -267,3 +271,18 @@ animated_advert_chooser_viewset = AnimatedAdvertChooserViewSet(
 )
 
 AdvertChooserWidget = animated_advert_chooser_viewset.widget_class
+
+
+class SnippetChooserViewSet(SnippetViewSet):
+    model = SnippetChooserModel
+
+    panels = [
+        FieldPanel(
+            "advert", widget=AdvertChooserWidget(linked_fields={"url": "#id_text"})
+        ),
+        FieldPanel("full_featured"),
+        FieldPanel("text"),
+    ]
+
+
+register_snippet(SnippetChooserViewSet)
