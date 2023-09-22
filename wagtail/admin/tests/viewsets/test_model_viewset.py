@@ -859,6 +859,17 @@ class TestHistoryView(WagtailTestUtils, TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0].select_one("td").text.strip(), "Created")
 
+    def test_empty(self):
+        ModelLogEntry.objects.all().delete()
+        response = self.client.get(self.url)
+        soup = self.get_soup(response.content)
+        results = soup.select_one("#listing-results")
+        table = soup.select_one("table")
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(results)
+        self.assertEqual(results.text.strip(), "No log entries found.")
+        self.assertIsNone(table)
+
     def test_edit_view_links_to_history_view(self):
         edit_url = reverse("feature_complete_toy:edit", args=(quote(self.object.pk),))
         response = self.client.get(edit_url)

@@ -46,12 +46,13 @@ class HistoryReportFilterSet(WagtailFilterSet):
 class HistoryView(IndexView):
     any_permission_required = ["add", "change", "delete"]
     page_title = gettext_lazy("History")
-    results_template_name = "wagtailadmin/generic/history_results.html"
+    results_template_name = "wagtailadmin/generic/listing_results.html"
     header_icon = "history"
     is_searchable = False
     paginate_by = 20
     filterset_class = HistoryReportFilterSet
     table_class = InlineActionsTable
+    no_results_message = gettext_lazy("No log entries found.")
 
     def setup(self, request, *args, pk, **kwargs):
         self.pk = pk
