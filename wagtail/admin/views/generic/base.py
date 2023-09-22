@@ -130,6 +130,7 @@ class BaseListingView(WagtailAdminTemplateMixin, BaseListView):
     index_url_name = None
     page_kwarg = "p"
     default_ordering = None
+    no_results_message = _("There are no results.")
 
     def get_template_names(self):
         if self.results_only:
@@ -171,6 +172,9 @@ class BaseListingView(WagtailAdminTemplateMixin, BaseListView):
         if self.index_url_name:
             return reverse(self.index_url_name)
 
+    def get_no_results_message(self):
+        return self.no_results_message
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
@@ -191,4 +195,5 @@ class BaseListingView(WagtailAdminTemplateMixin, BaseListView):
         else:
             context["items_count"] = len(context["object_list"])
 
+        context["no_results_message"] = self.get_no_results_message()
         return context

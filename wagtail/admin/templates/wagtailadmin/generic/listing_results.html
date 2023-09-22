@@ -8,5 +8,9 @@
         {% endif %}
     {% endblock %}
 {% else %}
-    {% block no_results_message %}{% endblock %}
+    {% block no_results_message %}
+        {% if no_results_message %}
+            <p>{{ no_results_message }}</p>
+        {% endif %}
+    {% endblock %}
 {% endif %}
