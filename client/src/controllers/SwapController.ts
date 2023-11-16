@@ -175,12 +175,9 @@ export class SwapController extends Controller<
     // for example - " " === "" and "first word " ==== "first word"
     if (currentQuery.trim() === newQuery.trim()) return;
 
-    // Update search query param ('q') to the new value or remove if empty
-    if (newQuery) {
-      searchParams.set(queryParam, newQuery);
-    } else {
-      searchParams.delete(queryParam);
-    }
+    // Update search query param ('q') to the new value,
+    // do not remove if empty
+    searchParams.set(queryParam, newQuery);
 
     // clear any params (e.g. page/p) if needed
     clearParams.forEach((param) => {

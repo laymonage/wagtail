@@ -126,7 +126,7 @@ class BaseSearchView(PermissionCheckedMixin, BaseListingView):
         else:
             self.selected_content_type = None
 
-        self.q = self.request.GET.get("q", "")
+        self.q = self.request.GET.get("q")
 
         return super().get(request)
 
@@ -143,7 +143,8 @@ class BaseSearchView(PermissionCheckedMixin, BaseListingView):
         if self.selected_content_type:
             pages = pages.filter(content_type=self.selected_content_type)
 
-        if self.q:
+        # Allow an empty ?q= query param to show the content type facets
+        if self.q is not None:
             # Parse query and filter
             pages, self.all_pages = page_filter_search(
                 self.q, pages, self.all_pages, self.ordering
