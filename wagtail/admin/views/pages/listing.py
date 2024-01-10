@@ -214,12 +214,14 @@ class BaseIndexView(generic.IndexView):
         else:
             pages = self.parent_page.get_children()
 
-        pages = pages.prefetch_related(
-            "content_type", "sites_rooted_here"
-        ) & self.permission_policy.explorable_instances(self.request.user)
-
         # We want specific page instances, but do not need streamfield values here
         pages = pages.defer_streamfields().specific()
+        return pages
+
+    def annotate_queryset(self, queryset):
+        pages = queryset.prefetch_related(
+            "content_type", "sites_rooted_here"
+        ) & self.permission_policy.explorable_instances(self.request.user)
 
         # Annotate queryset with various states to be used later for performance optimisations
         if getattr(settings, "WAGTAIL_WORKFLOW_ENABLED", True):

@@ -230,6 +230,9 @@ class BaseListingView(WagtailAdminTemplateMixin, BaseListView):
             ordering = (ordering,)
         return queryset.order_by(*ordering)
 
+    def annotate_queryset(self, queryset):
+        return queryset
+
     def get_base_queryset(self):
         if self.queryset is not None:
             queryset = self.queryset
@@ -254,6 +257,7 @@ class BaseListingView(WagtailAdminTemplateMixin, BaseListView):
         # https://github.com/django/django/blob/stable/4.1.x/django/views/generic/list.py#L22-L47
 
         queryset = self.get_base_queryset()
+        queryset = self.annotate_queryset(queryset)
         queryset = self.order_queryset(queryset)
         queryset = self.filter_queryset(queryset)
         return queryset
