@@ -233,6 +233,9 @@ class BaseListingView(WagtailAdminTemplateMixin, BaseListView):
     def annotate_queryset(self, queryset):
         return queryset
 
+    def modify_queryset(self, queryset):
+        return queryset
+
     def get_base_queryset(self):
         if self.queryset is not None:
             queryset = self.queryset
@@ -260,6 +263,7 @@ class BaseListingView(WagtailAdminTemplateMixin, BaseListView):
         queryset = self.annotate_queryset(queryset)
         queryset = self.order_queryset(queryset)
         queryset = self.filter_queryset(queryset)
+        queryset = self.modify_queryset(queryset)
         return queryset
 
     def get_table_kwargs(self):

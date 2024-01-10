@@ -259,18 +259,19 @@ class BaseIndexView(generic.IndexView):
 
         return queryset
 
-    def search_queryset(self, queryset):
+    def modify_queryset(self, queryset):
         # allow hooks to modify queryset. This should happen as close as possible to the
         # final queryset, but (for backward compatibility) needs to be passed an actual queryset
         # rather than a search result object
         for hook in hooks.get_hooks("construct_explorer_page_queryset"):
             queryset = hook(self.parent_page, queryset, self.request)
+        return queryset
 
+    def search_queryset(self, queryset):
         if self.is_searching:
             queryset = queryset.autocomplete(
                 self.query_string, order_by_relevance=(not self.is_explicitly_ordered)
             )
-
         return queryset
 
     def get_paginate_by(self, queryset):
