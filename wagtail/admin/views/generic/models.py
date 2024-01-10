@@ -180,7 +180,16 @@ class IndexView(
             {"Meta": Meta},
         )
 
+    @cached_property
+    def has_updated_at_column(self):
+        return any(
+            getattr(column, "accessor", None) == "_updated_at"
+            for column in self.columns
+        )
+
     def _annotate_queryset_updated_at(self, queryset):
+        if not self.has_updated_at_column:
+            return queryset
         # Annotate the objects' updated_at, use _ prefix to avoid name collision
         # with an existing database field.
         # By default, use the latest log entry's timestamp, but subclasses may
@@ -205,13 +214,17 @@ class IndexView(
         )
         return queryset.annotate(_updated_at=models.Subquery(latest_log))
 
+    def annotate_queryset(self, queryset):
+        return self._annotate_queryset_updated_at(queryset)
+
     def order_queryset(self, queryset):
-        has_updated_at_column = any(
-            getattr(column, "accessor", None) == "_updated_at"
-            for column in self.columns
-        )
-        if has_updated_at_column:
-            queryset = self._annotate_queryset_updated_at(queryset)
+        if not self.has_updated_at_column:
+            queryset = super().order_queryset(queryset)
+            # Preserve the model-level ordering if specified, but fall back on
+            # PK if not (to ensure pagination is consistent)
+            if not queryset.ordered:
+                queryset = queryset.order_by("-pk")
+            return queryset
 
         # Explicitly handle null values for the updated at column to ensure consistency
         # across database backends and match the behaviour in page explorer
@@ -221,16 +234,10 @@ class IndexView(
             return queryset.order_by(models.F("_updated_at").desc(nulls_last=True))
         else:
             queryset = super().order_queryset(queryset)
-
-            # Preserve the model-level ordering if specified, but fall back on
-            # updated_at and PK if not (to ensure pagination is consistent)
             if not queryset.ordered:
-                if has_updated_at_column:
-                    queryset = queryset.order_by(
-                        models.F("_updated_at").desc(nulls_last=True), "-pk"
-                    )
-                else:
-                    queryset = queryset.order_by("-pk")
+                queryset = queryset.order_by(
+                    models.F("_updated_at").desc(nulls_last=True), "-pk"
+                )
 
             return queryset
 
