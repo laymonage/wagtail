@@ -132,6 +132,7 @@ module.exports = {
       files: [
         'client/extract-translatable-strings.js',
         'client/tests/**',
+        'rspack.config.js',
         'webpack.config.js',
         'tailwind.config.js',
         'storybook/**/*',
