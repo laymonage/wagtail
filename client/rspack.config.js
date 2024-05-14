@@ -245,13 +245,6 @@ module.exports = function exports(env, argv) {
         {
           test: /\.(scss|css)$/,
           use: [
-            rspack.CssExtractRspackPlugin.loader,
-            {
-              loader: 'css-loader',
-              options: {
-                url: false,
-              },
-            },
             {
               loader: 'postcss-loader',
               options: {
