@@ -51,7 +51,7 @@ jobs:
         include:
           - python: '3.11'
             django: 'Django>=5.0,<5.1'
-            check_template_number_format: '1'
+            check_template_number_format: check-template
           - python: '3.12'
             django: 'Django>=5.1,<5.2'
             emailuser: emailuser
@@ -76,7 +76,7 @@ jobs:
         env:
           DATABASE_ENGINE: django.db.backends.sqlite3
           USE_EMAIL_USER_MODEL: ${{ matrix.emailuser }}
-          WAGTAIL_CHECK_TEMPLATE_NUMBER_FORMAT: ${{ matrix.check_template_number_format }}
+          WAGTAIL_CHECK_TEMPLATE_NUMBER_FORMAT: ${{ matrix.check_template_number_format && '1' }}
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
@@ -86,36 +86,35 @@ jobs:
 
   test-postgres:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental }}
+    continue-on-error: ${{ !!matrix.experimental }}
     strategy:
       matrix:
         include:
           - python: '3.9'
             django: 'Django>=4.2,<4.3'
             psycopg: 'psycopg2>=2.6'
-            experimental: false
+            postgres: 'postgres:12'
             parallel: '--parallel'
           - python: '3.12'
             django: 'Django>=5.0,<5.1'
             psycopg: 'psycopg>=3.1.8'
             postgres: 'postgres:15'
             notz: notz
-            experimental: false
             parallel: '--parallel'
           - python: '3.11'
             django: 'git+https://github.com/django/django.git@stable/5.1.x#egg=Django'
             psycopg: 'psycopg>=3.1.8'
             postgres: 'postgres:15'
-            experimental: true
+            experimental: experimental
           - python: '3.12'
             django: 'git+https://github.com/django/django.git@main#egg=Django'
             psycopg: 'psycopg>=3.1.8'
-            experimental: true
             postgres: 'postgres:latest'
             parallel: '--parallel'
+            experimental: experimental
     services:
       postgres:
-        image: ${{ matrix.postgres || 'postgres:12' }}
+        image: ${{ matrix.postgres }}
         env:
           POSTGRES_PASSWORD: postgres
         ports:
@@ -156,31 +155,28 @@ jobs:
 
   test-mysql:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental }}
+    continue-on-error: ${{ !!matrix.experimental }}
     strategy:
       matrix:
         include:
           - python: '3.10'
             django: 'Django>=4.2,<4.3'
-            experimental: false
+            mysql: 'mysql:8.0'
           - python: '3.11'
             django: 'Django>=4.2,<4.3'
-            experimental: false
             mysql: 'mariadb:10.5'
           - python: '3.12'
             django: 'Django>=5.1,<5.2'
-            experimental: false
             mysql: 'mariadb:11.4'
             emailuser: emailuser
           - python: '3.12'
             django: 'Django>=5.1,<5.2'
-            experimental: false
             parallel: '--parallel'
             mysql: 'mysql:8.4'
             emailuser: emailuser
     services:
       mysql:
-        image: ${{ matrix.mysql || 'mysql:8.0' }}
+        image: ${{ matrix.mysql }}
         env:
           MARIADB_ROOT_PASSWORD: root
           MYSQL_ROOT_PASSWORD: root
@@ -273,13 +269,12 @@ jobs:
 
   test-postgres-elasticsearch7:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental }}
+    continue-on-error: ${{ !!matrix.experimental }}
     strategy:
       matrix:
         include:
           - python: '3.9'
             django: 'Django>=4.2,<4.3'
-            experimental: false
 
     services:
       postgres:
@@ -332,13 +327,12 @@ jobs:
 
   test-sqlite-opensearch2:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental }}
+    continue-on-error: ${{ !!matrix.experimental }}
     strategy:
       matrix:
         include:
           - python: '3.10'
             django: 'Django>=5.0,<5.1'
-            experimental: false
 
     steps:
       - name: Configure sysctl limits
