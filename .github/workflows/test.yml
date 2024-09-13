@@ -15,18 +15,19 @@ concurrency:
 # Our test suite should cover:
 # - all supported databases against current Python and Django (including psycopg v2 and v3)
 # - at least one test run for each older supported version of Python and Django
+# - at least one test run for each supported database with DISABLE_TIMEZONE=yes
 # - at least one test run for each supported Elasticsearch version
 # - a test run against Django's git main and active stable branch (allowing failures)
-# - test runs with USE_EMAIL_USER_MODEL=yes, DISABLE_TIMEZONE=yes and WAGTAIL_CHECK_TEMPLATE_NUMBER_FORMAT=1
+# - test runs with USE_EMAIL_USER_MODEL=yes and WAGTAIL_CHECK_TEMPLATE_NUMBER_FORMAT=1
 
 # Current configuration:
 # - django 4.2, python 3.9, postgres:12, psycopg 2, parallel
 # - django 4.2, python 3.10, mysql:8.0
 # - django 4.2, python 3.11, mariadb:10.5
 # - django 5.0, python 3.11, sqlite, WAGTAIL_CHECK_TEMPLATE_NUMBER_FORMAT=1
-# - django 5.1, python 3.12, mysql:8.4, parallel, USE_EMAIL_USER_MODEL=yes
-# - django 5.1, python 3.12, mariadb:11.4, USE_EMAIL_USER_MODEL=yes
-# - django 5.1, python 3.12, sqlite, parallel, USE_EMAIL_USER_MODEL=yes
+# - django 5.1, python 3.12, mysql:8.4, parallel, DISABLE_TIMEZONE=yes, USE_EMAIL_USER_MODEL=yes
+# - django 5.1, python 3.12, mariadb:11.4, DISABLE_TIMEZONE=yes, USE_EMAIL_USER_MODEL=yes
+# - django 5.1, python 3.12, sqlite, parallel, DISABLE_TIMEZONE=yes, USE_EMAIL_USER_MODEL=yes
 # - django 5.1, python 3.12, postgres:15, psycopg 3, parallel, DISABLE_TIMEZONE=yes
 # - django stable/5.1.x, python 3.11, postgres:15, psycopg 3 (allow failures)
 # - django main, python 3.12, postgres:latest, psycopg 3, parallel (allow failures)
@@ -43,6 +44,13 @@ concurrency:
 permissions:
   contents: read # to fetch code (actions/checkout)
 
+env:
+  # Some databases i.e. MySQL, MariaDB, and SQLite do not support loading
+  # tz-aware datetimes from JSON fixtures when USE_TZ=False, so we need to
+  # remove the timezone from the fixtures.
+  REMOVE_TZ_FROM_FIXTURES: |
+    find . -type f -path '**/fixtures/*.json' -exec sed -i'' -E 's/([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})Z/\1/g' {} +
+
 jobs:
   test-sqlite:
     runs-on: ubuntu-latest
@@ -55,6 +63,7 @@ jobs:
           - python: '3.12'
             django: 'Django>=5.1,<5.2'
             emailuser: emailuser
+            notz: notz
             parallel: '--parallel'
 
     steps:
@@ -69,6 +78,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e '.[testing]' --config-settings editable_mode=strict
           pip install "${{ matrix.django }}"
+      - name: Remove timezone from test fixtures
+        if: ${{ matrix.notz }}
+        run: ${{ env.REMOVE_TZ_FROM_FIXTURES }}
       - name: Test
         run: |
           WAGTAIL_FAIL_ON_VERSIONED_STATIC=1 DJANGO_SETTINGS_MODULE=wagtail.test.settings django-admin check
@@ -76,6 +88,7 @@ jobs:
         env:
           DATABASE_ENGINE: django.db.backends.sqlite3
           USE_EMAIL_USER_MODEL: ${{ matrix.emailuser }}
+          DISABLE_TIMEZONE: ${{ matrix.notz }}
           WAGTAIL_CHECK_TEMPLATE_NUMBER_FORMAT: ${{ matrix.check_template_number_format && '1' }}
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -169,11 +182,13 @@ jobs:
             django: 'Django>=5.1,<5.2'
             mysql: 'mariadb:11.4'
             emailuser: emailuser
+            notz: notz
           - python: '3.12'
             django: 'Django>=5.1,<5.2'
             parallel: '--parallel'
             mysql: 'mysql:8.4'
             emailuser: emailuser
+            notz: notz
     services:
       mysql:
         image: ${{ matrix.mysql }}
@@ -200,6 +215,9 @@ jobs:
           pip install "mysqlclient>=1.4,<2"
           pip install -e '.[testing]' --config-settings editable_mode=strict
           pip install "${{ matrix.django }}"
+      - name: Remove timezone from test fixtures
+        if: ${{ matrix.notz }}
+        run: ${{ env.REMOVE_TZ_FROM_FIXTURES }}
       - name: Test
         run: |
           WAGTAIL_FAIL_ON_VERSIONED_STATIC=1 DJANGO_SETTINGS_MODULE=wagtail.test.settings django-admin check
