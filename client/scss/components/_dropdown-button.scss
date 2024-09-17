@@ -36,7 +36,7 @@ $radius: theme('borderRadius.sm');
     --last-item-border-top: #{$separator};
   }
 
-  &:has([data-placement^='bottom']) {
+  &:has([data-state='visible'][data-placement^='bottom']) {
     --primary-button-radius-top: #{$radius};
     --primary-button-radius-bottom: 0;
     --toggle-button-radius-top: #{$radius};
@@ -46,7 +46,7 @@ $radius: theme('borderRadius.sm');
     --first-item-border-top: #{$separator};
   }
 
-  &:has([data-placement^='top']) {
+  &:has([data-state='visible'][data-placement^='top']) {
     --primary-button-radius-top: 0;
     --primary-button-radius-bottom: #{$radius};
     --toggle-button-radius-top: 0;
