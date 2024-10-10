@@ -54,7 +54,21 @@
             <footer class="footer w-grid md:w-grid-flow-col">
                 <nav class="actions actions--primary footer__container" aria-label="{% trans 'Actions' %}">
                     {% block actions %}
-                        <button type="submit" class="button">{{ submit_button_label }}</button>
+                        {% fragment as main_action %}
+                            {% block main_action %}
+                                <button type="submit" class="button">{{ submit_button_label }}</button>
+                            {% endblock %}
+                        {% endfragment %}
+
+                        {% fragment stripped as extra_actions %}{% block extra_actions %}{% endblock %}{% endfragment %}
+
+                        {% if extra_actions %}
+                            {% dropdown_button button=main_action toggle_icon="arrow-up" %}
+                                {{ extra_actions }}
+                            {% enddropdown_button %}
+                        {% else %}
+                            {{ main_action }}
+                        {% endif %}
                     {% endblock %}
                 </nav>
             </footer>
