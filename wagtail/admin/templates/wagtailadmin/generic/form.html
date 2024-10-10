@@ -71,6 +71,9 @@
                         {% endif %}
                     {% endblock %}
                 </nav>
+                {% block unsaved_changes_warning %}
+                    {% include "wagtailadmin/shared/unsaved_changes_warning.html" %}
+                {% endblock%}
             </footer>
         {% endblock %}
     </form>
