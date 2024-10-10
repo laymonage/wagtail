@@ -58,10 +58,13 @@
                     <ul class="fields">
                         <li>{% formattedfield form.is_superuser %}</li>
                         <li>{% formattedfield form.groups %}</li>
-                        <li><button class="button">{% trans "Add user" %}</button></li>
                     </ul>
                 </section>
             </div>
+
+            {% block footer %}
+                {{ block.super }}
+            {% endblock %}
         </form>
     </div>
 {% endblock %}
