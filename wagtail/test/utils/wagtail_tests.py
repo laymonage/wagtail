@@ -2,15 +2,22 @@ import warnings
 from contextlib import contextmanager
 from typing import Union
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag, TemplateString
 from django.contrib.auth import get_user_model
 from django.test.testcases import assert_and_parse_html
+
+
+class CustomTag(Tag):
+    DEFAULT_INTERESTING_STRING_TYPES = (
+        *Tag.DEFAULT_INTERESTING_STRING_TYPES,
+        TemplateString,
+    )
 
 
 class WagtailTestUtils:
     @staticmethod
     def get_soup(markup: Union[str, bytes]) -> BeautifulSoup:
-        return BeautifulSoup(markup, "html.parser")
+        return BeautifulSoup(markup, "html.parser", element_classes={Tag: CustomTag})
 
     @staticmethod
     def create_test_user():
