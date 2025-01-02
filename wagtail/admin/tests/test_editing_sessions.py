@@ -285,7 +285,7 @@ class TestPingView(WagtailTestUtils, TestCase):
             'template[data-w-teleport-target-value="#title-text-w-overwrite-changes-dialog"]'
         )
         self.assertIsNotNone(dialog_title)
-        self.assertIn("Vic Otheruser saved a new version", dialog_title.string)
+        self.assertIn("Vic Otheruser saved a new version", dialog_title.text)
         dialog_subtitle = soup.select_one(
             'template[data-w-teleport-target-value="#subtitle-w-overwrite-changes-dialog"]'
         )
@@ -293,7 +293,7 @@ class TestPingView(WagtailTestUtils, TestCase):
         self.assertIn(
             "Proceeding will overwrite the changes made by Vic Otheruser. "
             "Refreshing the page will show you the new changes, but you will lose any of your unsaved changes.",
-            dialog_subtitle.string,
+            dialog_subtitle.text,
         )
 
         self.session.refresh_from_db()
@@ -338,10 +338,7 @@ class TestPingView(WagtailTestUtils, TestCase):
             'template[data-w-teleport-target-value="#title-text-w-overwrite-changes-dialog"]'
         )
         self.assertIsNotNone(dialog_title)
-        self.assertIn(
-            "Vic Otheruser saved a new version",
-            dialog_title.string,
-        )
+        self.assertIn("Vic Otheruser saved a new version", dialog_title.text)
         dialog_subtitle = soup.select_one(
             'template[data-w-teleport-target-value="#subtitle-w-overwrite-changes-dialog"]'
         )
@@ -349,7 +346,7 @@ class TestPingView(WagtailTestUtils, TestCase):
         self.assertIn(
             "Proceeding will overwrite the changes made by Vic Otheruser. "
             "Refreshing the page will show you the new changes, but you will lose any of your unsaved changes.",
-            dialog_subtitle.string,
+            dialog_subtitle.text,
         )
 
         self.session.refresh_from_db()
@@ -420,10 +417,7 @@ class TestPingView(WagtailTestUtils, TestCase):
             'template[data-w-teleport-target-value="#title-text-w-overwrite-changes-dialog"]'
         )
         self.assertIsNotNone(dialog_title)
-        self.assertIn(
-            "Gordon Thirduser saved a new version",
-            dialog_title.string,
-        )
+        self.assertIn("Gordon Thirduser saved a new version", dialog_title.text)
         dialog_subtitle = soup.select_one(
             'template[data-w-teleport-target-value="#subtitle-w-overwrite-changes-dialog"]'
         )
@@ -431,7 +425,7 @@ class TestPingView(WagtailTestUtils, TestCase):
         self.assertIn(
             "Proceeding will overwrite the changes made by Gordon Thirduser. "
             "Refreshing the page will show you the new changes, but you will lose any of your unsaved changes.",
-            dialog_subtitle.string,
+            dialog_subtitle.text,
         )
         other_session_text = rendered_sessions[1].text
         self.assertIn("Vic Otheruser", other_session_text)
@@ -490,10 +484,7 @@ class TestPingView(WagtailTestUtils, TestCase):
             'template[data-w-teleport-target-value="#title-text-w-overwrite-changes-dialog"]'
         )
         self.assertIsNotNone(dialog_title)
-        self.assertIn(
-            "System saved a new version",
-            dialog_title.string,
-        )
+        self.assertIn("System saved a new version", dialog_title.text)
         dialog_subtitle = soup.select_one(
             'template[data-w-teleport-target-value="#subtitle-w-overwrite-changes-dialog"]'
         )
@@ -501,7 +492,7 @@ class TestPingView(WagtailTestUtils, TestCase):
         self.assertIn(
             "Proceeding will overwrite the changes made by System. "
             "Refreshing the page will show you the new changes, but you will lose any of your unsaved changes.",
-            dialog_subtitle.string,
+            dialog_subtitle.text,
         )
         other_session_text = rendered_sessions[1].text
         self.assertIn("Vic Otheruser", other_session_text)

@@ -187,7 +187,7 @@ class TestTemplateConfiguration(WagtailTestUtils, TestCase):
                 subtitle_el = h1.select_one("span")
                 if subtitle:
                     self.assertIsNotNone(subtitle_el)
-                    self.assertEqual(subtitle_el.string, subtitle)
+                    self.assertEqual(subtitle_el.text, subtitle)
                 else:
                     self.assertIsNone(subtitle_el)
                 icon = h1.select_one("svg use[href='#icon-media']")
@@ -299,7 +299,7 @@ class TestListFilter(WagtailTestUtils, TestCase):
                 soup = self.get_soup(response.content)
                 label = soup.select_one(f"label#id_{lookup}-label")
                 self.assertIsNotNone(label)
-                self.assertEqual(label.string.strip(), label_text)
+                self.assertEqual(label.text.strip(), label_text)
                 input = soup.select_one(f"input#id_{lookup}")
                 self.assertIsNotNone(input)
 
@@ -322,7 +322,7 @@ class TestListFilter(WagtailTestUtils, TestCase):
                 soup = self.get_soup(response.content)
                 label = soup.select_one(f"label#id_{lookup}-label")
                 self.assertIsNotNone(label)
-                self.assertEqual(label.string.strip(), label_text)
+                self.assertEqual(label.text.strip(), label_text)
                 input = soup.select_one(f"input#id_{lookup}")
                 self.assertIsNotNone(input)
 
@@ -341,7 +341,7 @@ class TestListFilter(WagtailTestUtils, TestCase):
                 soup = self.get_soup(response.content)
                 label = soup.select_one(f"label#id_{lookup}-label")
                 self.assertIsNotNone(label)
-                self.assertEqual(label.string.strip(), label_text)
+                self.assertEqual(label.text.strip(), label_text)
                 input = soup.select_one(f"input#id_{lookup}")
                 self.assertIsNotNone(input)
                 self.assertFalse(input.attrs.get("value"))
@@ -367,7 +367,7 @@ class TestListFilter(WagtailTestUtils, TestCase):
                 soup = self.get_soup(response.content)
                 label = soup.select_one(f"label#id_{lookup}-label")
                 self.assertIsNotNone(label)
-                self.assertEqual(label.string.strip(), label_text)
+                self.assertEqual(label.text.strip(), label_text)
                 input = soup.select_one(f"input#id_{lookup}")
                 self.assertIsNotNone(input)
                 self.assertEqual(input.attrs.get("value"), value)
@@ -402,7 +402,7 @@ class TestListFilter(WagtailTestUtils, TestCase):
                 soup = self.get_soup(response.content)
                 label = soup.select_one(f"label#id_{lookup}-label")
                 self.assertIsNotNone(label)
-                self.assertEqual(label.string.strip(), label_text)
+                self.assertEqual(label.text.strip(), label_text)
                 input = soup.select_one(f"input#id_{lookup}")
                 self.assertIsNotNone(input)
                 self.assertEqual(input.attrs.get("value"), value)
@@ -1079,13 +1079,13 @@ class TestHistoryView(WagtailTestUtils, TestCase):
         soup = self.get_soup(response.content)
         rows = soup.select("#listing-results tbody tr")
         heading = soup.select_one('h2[role="alert"]')
-        self.assertEqual(heading.string.strip(), "There is 1 match")
+        self.assertEqual(heading.text.strip(), "There is 1 match")
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0].select_one("td").text.strip(), "Created")
 
         # Should display the heading when there are results
         heading = soup.select_one('h2[role="alert"]')
-        self.assertEqual(heading.string.strip(), "There is 1 match")
+        self.assertEqual(heading.text.strip(), "There is 1 match")
 
         response = self.client.get(
             self.url,

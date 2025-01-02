@@ -821,7 +821,7 @@ class TestPageExplorer(WagtailTestUtils, TestCase):
         error_message = soup.select_one(".w-field__errors .error-message")
         self.assertIsNotNone(error_message)
         self.assertEqual(
-            error_message.string.strip(),
+            error_message.text.strip(),
             "Select a valid choice. unknown is not one of the available choices.",
         )
 
