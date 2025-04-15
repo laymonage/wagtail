@@ -4,7 +4,6 @@ import re
 from collections import defaultdict
 
 from django import forms
-from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView
@@ -12,6 +11,7 @@ from django.views.generic.base import TemplateView
 from wagtail import hooks
 from wagtail.admin import messages
 from wagtail.admin.forms.search import SearchForm
+from wagtail.admin.paginator import WagtailPaginator
 from wagtail.admin.rich_text import get_rich_text_editor_widget
 from wagtail.admin.staticfiles import versioned_static
 from wagtail.admin.views.generic import WagtailAdminTemplateMixin
@@ -144,7 +144,7 @@ class IndexView(WagtailAdminTemplateMixin, TemplateView):
 
         context["all_icons"] = self.get_icons()
         context["example_form"] = ExampleForm()
-        context["example_page"] = Paginator(list(range(100)), 10).page(2)
+        context["example_page"] = WagtailPaginator(list(range(100)), 10).page(2)
         context["search_form"] = SearchForm()
 
         return context

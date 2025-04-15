@@ -3,7 +3,7 @@ from collections import defaultdict
 from urllib.parse import parse_qs, quote, urlencode, urlsplit
 
 from django.conf import settings
-from django.core.paginator import InvalidPage, Paginator
+from django.core.paginator import InvalidPage
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
@@ -21,6 +21,7 @@ from wagtail.admin.forms.choosers import (
 )
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
+from wagtail.admin.paginator import WagtailPaginator
 from wagtail.admin.ui.tables import Column, DateColumn, Table
 from wagtail.coreutils import resolve_model_string
 from wagtail.models import Locale, Page, Site
@@ -347,7 +348,7 @@ class BrowseView(View):
         # Pagination
         # We apply pagination first so we don't need to walk the entire list
         # in the block below
-        paginator = Paginator(pages, per_page=25)
+        paginator = WagtailPaginator(pages, per_page=25)
         try:
             pages = paginator.page(request.GET.get("p", 1))
         except InvalidPage:
@@ -466,7 +467,7 @@ class SearchView(View):
         else:
             pages = pages.none()
 
-        paginator = Paginator(pages, per_page=25)
+        paginator = WagtailPaginator(pages, per_page=25)
         pages = paginator.get_page(request.GET.get("p"))
 
         for page in pages:

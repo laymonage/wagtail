@@ -1,4 +1,4 @@
-from django.core.paginator import InvalidPage, Paginator
+from django.core.paginator import InvalidPage
 from django.db import transaction
 from django.db.models import Sum, functions
 from django.http import Http404
@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy
 from wagtail.admin import messages
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
+from wagtail.admin.paginator import WagtailPaginator
 from wagtail.admin.ui.tables import Column, RelatedObjectsColumn, TitleColumn
 from wagtail.admin.views import generic
 from wagtail.contrib.search_promotions import forms, models
@@ -226,7 +227,7 @@ def chooser(request, get_results=False):
     else:
         searchform = SearchForm()
 
-    paginator = Paginator(queries, per_page=10)
+    paginator = WagtailPaginator(queries, per_page=10)
     try:
         queries = paginator.page(request.GET.get("p", 1))
     except InvalidPage:

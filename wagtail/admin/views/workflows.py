@@ -2,7 +2,6 @@ import django_filters
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
-from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Count, Prefetch
 from django.db.models.functions import Lower
@@ -32,6 +31,7 @@ from wagtail.admin.forms.workflows import (
     get_workflow_edit_handler,
 )
 from wagtail.admin.modal_workflow import render_modal_workflow
+from wagtail.admin.paginator import WagtailPaginator
 from wagtail.admin.ui.tables import BaseColumn, Column, TitleColumn
 from wagtail.admin.views.generic import CreateView, DeleteView, EditView, IndexView
 from wagtail.admin.views.generic.base import BaseListingView
@@ -288,7 +288,7 @@ class Edit(EditView):
     def get_paginated_pages(self):
         # Get the (paginated) list of Pages to which this Workflow is assigned.
         pages = Page.objects.filter(workflowpage__workflow=self.get_object())
-        pages.paginator = Paginator(pages, self.MAX_PAGES)
+        pages.paginator = WagtailPaginator(pages, self.MAX_PAGES)
         page_number = int(self.request.GET.get("p", 1))
         paginated_pages = pages.paginator.page(page_number)
         return paginated_pages
@@ -929,7 +929,7 @@ class BaseTaskChooserView(TemplateView):
             tasks = tasks.filter(name__icontains=q)
 
         # Pagination
-        paginator = Paginator(tasks, per_page=10)
+        paginator = WagtailPaginator(tasks, per_page=10)
         tasks = paginator.get_page(self.request.GET.get("p"))
 
         return {
