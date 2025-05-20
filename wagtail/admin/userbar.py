@@ -307,6 +307,7 @@ class Userbar(Component):
         request = parent_context.get("request")
         # Render the userbar differently within the preview panel.
         in_preview_panel = getattr(request, "in_preview_panel", False)
+        origin = f"{request.scheme}://{request.get_host()}"
 
         if not request or request.user.is_anonymous:
             language = None
@@ -361,6 +362,7 @@ class Userbar(Component):
             # Render the userbar items
             return {
                 "request": request,
+                "origin": origin,
                 "items": rendered_items,
                 "position": self.position,
                 "page": self.object,
