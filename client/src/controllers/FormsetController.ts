@@ -94,7 +94,7 @@ export class FormsetController extends Controller<HTMLElement> {
   /** Value tracking for the total amount of forms either active or deleted. */
   declare totalValue: number;
 
-  elementPrefixRegex = /__prefix__(.*?['"])/g;
+  elementPrefixRegex = /__prefix__(.*?('|"|\\u0022))/g;
 
   initialize() {
     this.syncOrdering = debounce(this.syncOrdering.bind(this), 50);
