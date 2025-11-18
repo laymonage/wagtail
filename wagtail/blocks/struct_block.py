@@ -1,4 +1,5 @@
 import collections
+from typing import Union
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -68,6 +69,35 @@ class StructBlockValidationError(ValidationError):
                 for (name, error) in self.block_errors.items()
             }
         return result
+
+
+class BlockGroup:
+    def __init__(
+        self,
+        heading: str,
+        blocks: list[Union[str, "BlockGroup"]],
+        icon="placeholder",
+        collapsed=False,
+        classname="",
+    ):
+        self.heading = heading
+        self.blocks = blocks
+        self.icon = icon
+        self.collapsed = collapsed
+        self.classname = classname
+
+    @classmethod
+    def as_json_from_list(cls, list: list[Union[str, "BlockGroup"]]):
+        return [block if isinstance(block, str) else block.as_json() for block in list]
+
+    def as_json(self):
+        return {
+            "heading": self.heading,
+            "blocks": self.as_json_from_list(self.blocks),
+            "icon": self.icon,
+            "collapsed": self.collapsed,
+            "classname": self.classname,
+        }
 
 
 class StructValue(collections.OrderedDict):
@@ -393,6 +423,7 @@ class BaseStructBlock(Block):
         value_class = StructValue
         label_format = None
         collapsed = False
+        layout: list[Union[str, "BlockGroup"]] | None = None
         # No icon specified here, because that depends on the purpose that the
         # block is being used for. Feel encouraged to specify an icon in your
         # descendant block type
@@ -406,7 +437,7 @@ class StructBlock(BaseStructBlock, metaclass=DeclarativeSubBlocksMetaclass):
 class StructBlockAdapter(Adapter):
     js_constructor = "wagtail.blocks.StructBlock"
 
-    def js_args(self, block):
+    def js_args(self, block: StructBlock):
         meta = {
             "label": block.label,
             "description": block.get_description(),
@@ -419,6 +450,8 @@ class StructBlockAdapter(Adapter):
             "attrs": block.meta.form_attrs or {},
         }
 
+        block_meta: StructBlock.Meta = block.meta
+
         help_text = getattr(block.meta, "help_text", None)
         if help_text:
             meta["helpText"] = help_text
@@ -430,6 +463,11 @@ class StructBlockAdapter(Adapter):
         # Check specifically for None to allow for empty string
         if block.meta.label_format is not None:
             meta["labelFormat"] = block.meta.label_format
+
+        if block_meta.layout:
+            meta["layout"] = BlockGroup.as_json_from_list(block_meta.layout)
+        else:
+            meta["layout"] = list(block.child_blocks.keys())
 
         return [
             block.name,

@@ -33,6 +33,9 @@ window.comments = (() => {
     const contentpaths = [];
     while (element !== null) {
       contentpaths.push(element.dataset.contentpath);
+      if (!element.parentElement) {
+        console.trace(element);
+      }
       element = element.parentElement.closest('[data-contentpath]');
     }
     contentpaths.reverse();
