@@ -143,8 +143,8 @@
     "uuid": "^11.1.0"
   },
   "scripts": {
-    "start": "rspack --config ./client/rspack.config.js --mode development --watch",
-    "build": "rspack --config ./client/rspack.config.js --mode production",
+    "start": "rspack --config ./client/rspack.config.mjs --mode development --watch",
+    "build": "rspack --config ./client/rspack.config.mjs --mode production",
     "fix": "npm run @all -- 'npm:fix:*'",
     "fix:css": "stylelint --fix **/*.scss",
     "fix:js": "eslint --fix .",
