@@ -1,3 +1,6 @@
+import { mergeRsbuildConfig } from '@rsbuild/core';
+import { pluginSass } from '@rsbuild/plugin-sass';
+
 const storybook = {
   stories: [
     '../../client/**/*.mdx',
@@ -5,52 +8,34 @@ const storybook = {
     '../../wagtail/**/*.@(mdx|stories.*)',
   ],
 
-  addons: ['@storybook/addon-docs', '@storybook/addon-webpack5-compiler-babel'],
-  framework: { name: '@storybook/react-webpack5', options: {} },
+  addons: ['@storybook/addon-docs'],
+  framework: { name: 'storybook-react-rsbuild', options: {} },
 
-  /**
-   * Redefine Babel config to allow TypeScript class fields `declare`.
-   * @see https://github.com/storybookjs/storybook/issues/12479.
-   * The resulting configuration is closer to Wagtail’s Webpack + TypeScript setup,
-   * preventing other potential issues with JS transpilation differences.
-   */
-  babel: async (options) => ({
-    ...options,
-    plugins: [],
-    presets: [
-      ['@babel/preset-typescript', { allowDeclareFields: true }],
-      ['@babel/preset-react', { runtime: 'automatic' }],
-    ],
-  }),
-
-  webpackFinal: (config) => {
-    const rules = [
-      {
-        test: /\.(scss|css)$/,
-        use: [
-          'style-loader',
-          { loader: 'css-loader', options: { url: false } },
-          {
-            loader: 'postcss-loader',
-            options: {
-              postcssOptions: {
-                plugins: ['tailwindcss', 'autoprefixer', 'cssnano'],
-              },
-            },
-          },
-          'sass-loader',
-        ],
+  rsbuildFinal: (config) =>
+    mergeRsbuildConfig(config, {
+      plugins: [pluginSass()],
+      tools: {
+        cssLoader: { url: false },
+        postcss: (opts) => {
+          opts.postcssOptions = opts.postcssOptions || {};
+          opts.postcssOptions.plugins = [
+            ...(opts.postcssOptions.plugins || []),
+            'tailwindcss',
+            'autoprefixer',
+            'cssnano',
+          ];
+        },
+        rspack: (rspackConfig, { appendRules }) => {
+          appendRules({ test: /\.(md|html)$/, type: 'asset/source' });
+          // Allow using path magic variables to reduce boilerplate in stories.
+          rspackConfig.node = {
+            ...(rspackConfig.node || {}),
+            __filename: true,
+            __dirname: true,
+          };
+        },
       },
-      { test: /\.(md|html)$/, type: 'asset/source' },
-    ];
-
-    config.module.rules = config.module.rules.concat(rules);
-
-    // Allow using path magic variables to reduce boilerplate in stories.
-    config.node = { __filename: true, __dirname: true };
-
-    return config;
-  },
+    }),
 
   typescript: {
     reactDocgen: 'react-docgen',
