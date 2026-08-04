@@ -12,11 +12,10 @@ class WagtailAppConfig(AppConfig):
 
     def ready(self):
         from wagtail.actions import register_default_actions
-
-        register_default_actions()
-
         from wagtail.models import AbstractPage
         from wagtail.models.reference_index import ReferenceIndex
+
+        register_default_actions()
 
         for model in apps.get_models():
             if issubclass(model, AbstractPage):
