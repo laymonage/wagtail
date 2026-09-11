@@ -3,3 +3,5 @@
 
 # OpenAPI schema snapshots for API v3
 **/openapi*.json linguist-generated
+
+.github/workflows/*.lock.yml linguist-generated=true

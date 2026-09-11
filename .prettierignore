@@ -9,6 +9,8 @@ static
 _build
 # File types which Prettier supports but we don’t want auto-formatting.
 *.md
+# Generated files.
+.github/workflows/*.lock.yml
 # Files which contain incompatible syntax.
 *.html
 .mypy_cache
