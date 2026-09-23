@@ -67,7 +67,8 @@ The API supports custom models set via `WAGTAILIMAGES_IMAGE_MODEL` (see [](custo
 [Renditions](image_renditions) are exposed per-project through `api_fields`, the same mechanism as [in the v2 API](api_v2_images):
 
 ```python
-from wagtail.images.api.fields import ImageRenditionField
+from wagtail.api import APIField
+from wagtail.images.api import ImageRenditionField
 
 
 class BlogPage(Page):
@@ -76,6 +77,15 @@ class BlogPage(Page):
     api_fields = [
         APIField("thumbnail", serializer=ImageRenditionField("fill-300x300")),
     ]
+```
+
+`ImageRenditionField` is importable from `wagtail.images.api` (and from `wagtail.images.api.v3.fields`), and does not depend on Django REST Framework. As it is not a Django REST Framework field, it cannot be used with the API v2 serializers, which expect DRF-based serializer fields. To generate a rendition for an image stored in another field, pass its name as `source`, as in API v2:
+
+```python
+APIField(
+    "image_hero",
+    serializer=ImageRenditionField("fill-1920x600", source="image"),
+)
 ```
 
 There is no dedicated rendition endpoint in the v3 API. Serializer-backed API fields such as `ImageRenditionField` remain readable through the compatibility shim.
